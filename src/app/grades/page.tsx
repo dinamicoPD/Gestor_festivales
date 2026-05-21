@@ -4,13 +4,6 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import * as XLSX from 'xlsx'
 
-interface Grade {
-  id: string
-  name: string
-  studentCount: number
-  participants: Participant[]
-}
-
 interface Participant {
   id: string
   name: string
@@ -18,33 +11,39 @@ interface Participant {
   team: number
 }
 
+interface Grade {
+  id: string
+  name: string
+  studentCount: number
+  participants: Participant[]
+}
+
+const supabase = createClient()
+
 export default function GradesPage() {
   const [grades, setGrades] = useState<Grade[]>([])
   const [newGradeName, setNewGradeName] = useState('')
   const [newGradeStudents, setNewGradeStudents] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const supabase = createClient()
 
   useEffect(() => {
-    loadGrades()
+    void (async () => {
+      const { data } = await supabase
+        .from('grades')
+        .select('*, participants(*)')
+        .order('name')
+      
+      if (data) {
+        const formatted = data.map(g => ({
+          id: g.id,
+          name: g.name,
+          studentCount: g.student_count,
+          participants: g.participants || []
+        }))
+        setGrades(formatted)
+      }
+    })()
   }, [])
-
-  const loadGrades = async () => {
-    const { data } = await supabase
-      .from('grades')
-      .select('*, participants(*)')
-      .order('name')
-    
-    if (data) {
-      const formatted = data.map(g => ({
-        id: g.id,
-        name: g.name,
-        studentCount: g.student_count,
-        participants: g.participants || []
-      }))
-      setGrades(formatted)
-    }
-  }
 
   const calculateTeams = (studentCount: number) => {
     if (!studentCount || studentCount <= 0) return { teamsOf3: 0, teamsOf2: 0, totalTeams: 0 }
@@ -92,7 +91,7 @@ export default function GradesPage() {
       const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 })
       
       for (let i = 1; i < jsonData.length; i++) {
-        const row = jsonData[i] as any[]
+        const row = jsonData[i] as string[]
         if (row[0] && row[1]) {
           supabase.from('grades').upsert({
             name: row[0],
@@ -100,7 +99,22 @@ export default function GradesPage() {
           })
         }
       }
-      loadGrades()
+      void (async () => {
+        const { data } = await supabase
+          .from('grades')
+          .select('*, participants(*)')
+          .order('name')
+        
+        if (data) {
+          const formatted = data.map(g => ({
+            id: g.id,
+            name: g.name,
+            studentCount: g.student_count,
+            participants: g.participants || []
+          }))
+          setGrades(formatted)
+        }
+      })()
     }
     reader.readAsArrayBuffer(selectedFile)
   }
@@ -125,7 +139,6 @@ export default function GradesPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Add Grade Form */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Agregar Grado</h2>
           <div className="flex gap-4">
@@ -149,7 +162,6 @@ export default function GradesPage() {
           </div>
         </div>
 
-        {/* Import Excel */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Importar desde Excel</h2>
           <div className="flex gap-4">
@@ -165,7 +177,6 @@ export default function GradesPage() {
           </div>
         </div>
 
-        {/* Grades Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">

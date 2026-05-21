@@ -3,17 +3,21 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+interface Festival {
+  id: string
+  colegio: string
+  ciudad: string
+  fecha: string
+}
+
+const supabase = createClient()
+
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const [festivals, setFestivals] = useState<any[]>([])
+  const [festivals, setFestivals] = useState<Festival[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-
       const { data: festivalsData } = await supabase
         .from('festivals')
         .select('*')

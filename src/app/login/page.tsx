@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import bcrypt from 'bcryptjs'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -21,11 +22,10 @@ export default function LoginPage() {
     const email = formData.get('email') as string
     const fullName = formData.get('fullName') as string
 
-    const supabase = await createClient()
+    const supabase = createClient()
 
     try {
       if (isLogin) {
-        // Login logic
         const { data: user, error } = await supabase
           .from('users')
           .select('*')
@@ -36,16 +36,25 @@ export default function LoginPage() {
           throw new Error('Usuario no encontrado')
         }
 
-        // TODO: Verify password hash in production
+        const isValid = await bcrypt.compare(password, user.password_hash)
+        if (!isValid) {
+          throw new Error('Contraseña incorrecta')
+        }
+
+        if (!user.active) {
+          throw new Error('Usuario deshabilitado')
+        }
+
+        document.cookie = 'festival_auth_token=true; path=/; max-age=86400'
         router.push('/dashboard')
       } else {
-        // Register logic
-        const { data, error } = await supabase
+        const passwordHash = await bcrypt.hash(password, 10)
+        const { error } = await supabase
           .from('users')
           .insert([{
             username,
             email,
-            password_hash: btoa(password),
+            password_hash: passwordHash,
             full_name: fullName,
             role: 'organizer',
             active: true
@@ -57,8 +66,8 @@ export default function LoginPage() {
 
         router.push('/dashboard')
       }
-    } catch (err: any) {
-      setError(err.message || 'Error en la operación')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error en la operación')
     } finally {
       setLoading(false)
     }
@@ -90,33 +99,33 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Correo
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required={!isLogin}
-              />
-            </div>
-          )}
+            <>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Correo
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required={!isLogin}
+                />
+              </div>
 
-          {!isLogin && (
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre Completo
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required={!isLogin}
-              />
-            </div>
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre Completo
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required={!isLogin}
+                />
+              </div>
+            </>
           )}
 
           <div>

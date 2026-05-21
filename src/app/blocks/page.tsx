@@ -9,39 +9,42 @@ interface Grade {
   participants: { id: string }[]
 }
 
+interface BlockGrade {
+  nombre: string
+  participantes: number
+  equipos: number
+}
+
+interface Block {
+  numero: number
+  participantes: number
+  grados: BlockGrade[]
+}
+
+const supabase = createClient()
+
 export default function BlocksPage() {
   const [grades, setGrades] = useState<Grade[]>([])
   const [selectedGrades, setSelectedGrades] = useState<string[]>([])
-  const [blocks, setBlocks] = useState<any[]>([])
-  const supabase = createClient()
+  const [blocks, setBlocks] = useState<Block[]>([])
 
   useEffect(() => {
-    loadGrades()
+    void (async () => {
+      const { data } = await supabase
+        .from('grades')
+        .select('*, participants(*)')
+      
+      setGrades(data?.map(g => ({ ...g, participants: g.participants || [] })) || [])
+    })()
   }, [])
-
-  const loadGrades = async () => {
-    const { data } = await supabase
-      .from('grades')
-      .select('*, participants(*)')
-    
-    setGrades(data?.map(g => ({ ...g, participants: g.participants || [] })) || [])
-  }
 
   const calculateEquipos = (count: number) => Math.ceil(count / 3)
 
   const generateBlocks = () => {
     const selected = grades.filter(g => selectedGrades.includes(g.id))
-    const allParticipants = selected.flatMap(g => 
-      g.participants.map((p: any, i: number) => ({ 
-        ...p, 
-        gradeName: g.name,
-        gradeId: g.id
-      }))
-    )
-
     const MAX_PER_BLOCK = 150
-    const newBlocks = []
-    let currentBlock: any = { numero: 1, participantes: 0, grados: [] }
+    const newBlocks: Block[] = []
+    let currentBlock: Block = { numero: 1, participantes: 0, grados: [] }
 
     for (const grade of selected) {
       const gradeParticipants = grade.participants.length
@@ -57,7 +60,7 @@ export default function BlocksPage() {
         }
 
         const assign = Math.min(remaining, space)
-        const existing = currentBlock.grados.find((g: any) => g.nombre === grade.name)
+        const existing = currentBlock.grados.find(g => g.nombre === grade.name)
         
         if (existing) {
           existing.participantes += assign
@@ -91,7 +94,6 @@ export default function BlocksPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Select Grades */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Seleccionar Grados</h2>
           <div className="grid grid-cols-4 gap-2">
@@ -117,7 +119,6 @@ export default function BlocksPage() {
           </button>
         </div>
 
-        {/* Blocks Display */}
         {blocks.length > 0 && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">Bloques Generados</h2>
@@ -126,7 +127,7 @@ export default function BlocksPage() {
                 <h3 className="font-bold">Bloque {block.numero}</h3>
                 <p>Participantes: {block.participantes} / 150</p>
                 <div className="mt-2">
-                  {block.grados.map((g: any) => (
+                  {block.grados.map(g => (
                     <div key={g.nombre}>
                       {g.nombre}: {g.participantes} ({g.equipos} equipos)
                     </div>

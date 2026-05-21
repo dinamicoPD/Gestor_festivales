@@ -3,27 +3,41 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+interface Guardian {
+  id: string
+  block_id: string
+  estacion: number
+  juego: string
+  guardian: string
+  ubicacion: string
+}
+
+interface Block {
+  id: string
+  numero: number
+  guardians: Guardian[]
+  chiefs: unknown[]
+}
+
+const supabase = createClient()
+
 export default function GuardiansPage() {
-  const [blocks, setBlocks] = useState<any[]>([])
+  const [blocks, setBlocks] = useState<Block[]>([])
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null)
-  const [guardians, setGuardians] = useState<any[]>([])
   const [station, setStation] = useState('')
   const [game, setGame] = useState('')
   const [guardianName, setGuardianName] = useState('')
   const [location, setLocation] = useState('')
-  const supabase = createClient()
 
   useEffect(() => {
-    loadBlocks()
+    void (async () => {
+      const { data } = await supabase
+        .from('blocks')
+        .select('*, guardians(*), chiefs(*)')
+      
+      setBlocks(data || [])
+    })()
   }, [])
-
-  const loadBlocks = async () => {
-    const { data } = await supabase
-      .from('blocks')
-      .select('*, guardians(*), chiefs(*)')
-    
-    setBlocks(data || [])
-  }
 
   const addGuardian = async () => {
     if (!selectedBlock || !station || !game || !guardianName || !location) return
@@ -43,7 +57,13 @@ export default function GuardiansPage() {
       setGame('')
       setGuardianName('')
       setLocation('')
-      loadBlocks()
+      void (async () => {
+        const { data } = await supabase
+          .from('blocks')
+          .select('*, guardians(*), chiefs(*)')
+        
+        setBlocks(data || [])
+      })()
     }
   }
 
@@ -112,7 +132,6 @@ export default function GuardiansPage() {
           )}
         </div>
 
-        {/* Guardians List */}
         {selectedBlock && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">Guardianes del Bloque</h2>
@@ -126,7 +145,7 @@ export default function GuardiansPage() {
                 </tr>
               </thead>
               <tbody>
-                {blocks.find(b => b.id === selectedBlock)?.guardians?.map((g: any) => (
+                {blocks.find(b => b.id === selectedBlock)?.guardians?.map(g => (
                   <tr key={g.id} className="border-t">
                     <td className="px-4 py-2">{g.estacion}</td>
                     <td className="px-4 py-2">{g.juego}</td>
