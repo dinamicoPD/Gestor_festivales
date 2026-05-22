@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import * as XLSX from 'xlsx'
+import Link from 'next/link'
 
 interface Participant {
   id: string
@@ -130,13 +131,18 @@ export default function GradesPage() {
     }
   }, { students: 0, teams3: 0, teams2: 0, teams: 0, participants: 0 })
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Gestión de Grados</h1>
-        </div>
-      </header>
+   return (
+     <div className="min-h-screen bg-gray-50">
+       <header className="bg-white shadow">
+         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+           <h1 className="text-2xl font-bold text-gray-800">Gestión de Grados</h1>
+           <Link href="/dashboard">
+             <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+               Volver al Panel
+             </button>
+           </Link>
+         </div>
+       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow p-6 mb-6">

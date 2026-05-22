@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   
   // Allow public paths
-  if (path === '/login' || path === '/' || path.startsWith('/api')) {
+  if (path === '/login' || path.startsWith('/api')) {
     return NextResponse.next()
   }
   
