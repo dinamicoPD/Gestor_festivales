@@ -1,0 +1,2647 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+database/
+  admin-setup.sql
+  schema.sql
+public/
+  file.svg
+  globe.svg
+  next.svg
+  vercel.svg
+  window.svg
+src/
+  app/
+    admin/
+      page.tsx
+    register/
+      page.tsx
+    tipos-juegos/
+      page.tsx
+    favicon.ico
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    CrearFestivalForm.tsx
+    GestionModal.tsx
+    LoginForm.tsx
+  hooks/
+    useAuth.tsx
+    useFestivales.ts
+    useJuegosPorTipo.ts
+    useTiposFestival.ts
+    useUsuarios.tsx
+  lib/
+    supabase.ts
+  types/
+    festival.ts
+  utils/
+    festival.ts
+.gitignore
+<arg_value>CONTENT
+AGENTS.md
+CLAUDE.md
+eslint.config.mjs
+next.config.ts
+package.json
+postcss.config.mjs
+README.md
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="database/admin-setup.sql">
+-- Script para crear el primer usuario administrador en Supabase
+-- Ejecútalo en el SQL Editor de Supabase después de crear tu base de datos
+
+-- PASO 1: Crear el usuario en Authentication > Users de Supabase
+-- Usa el email y password que desees
+
+-- PASO 2: Ejecuta este script con tu email:
+-- Reemplaza 'tu-email@dominio.com' con el email del usuario admin
+
+-- Actualiza el perfil existente o créalo si no existe
+INSERT INTO perfiles (id, es_admin, activo)
+SELECT id, true, true 
+FROM auth.users 
+WHERE email = 'tu-email@dominio.com'
+ON CONFLICT (id) DO UPDATE 
+SET es_admin = true, activo = true;
+
+-- PASO 3: Verifica que se creó correctamente:
+-- SELECT u.email, p.es_admin, p.activo FROM perfiles p JOIN auth.users u ON p.id = u.id WHERE p.es_admin = true;
+
+-- NOTA: Si el usuario ya se registró vía /register, 
+-- el trigger debería haber creado su perfil automáticamente con activo=false.
+-- En ese caso solo necesitas actualizar:
+-- UPDATE perfiles SET es_admin = true, activo = true WHERE id = (SELECT id FROM auth.users WHERE email = 'tu-email@dominio.com');
+</file>
+
+<file path="database/schema.sql">
+-- Festival Management System Database Schema for Supabase
+-- Supabase PostgreSQL compatible with public access policies
+
+-- Festival types/categories
+CREATE TABLE tipos_festival (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    descripcion TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default festival types
+INSERT INTO tipos_festival (nombre, descripcion) VALUES 
+    ('Artes', 'Festival de artes integradas'),
+    ('Deportes', 'Festival deportivo'),
+    ('Ciencias', 'Festival de ciencias'),
+    ('Literatura', 'Festival literario'),
+    ('Música', 'Festival musical')
+ON CONFLICT (nombre) DO NOTHING;
+
+-- Festival games (organized by type)
+CREATE TABLE juegos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(255) NOT NULL,
+    tipo_festival_id UUID NOT NULL REFERENCES tipos_festival(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(nombre, tipo_festival_id)
+);
+
+-- Main festivals table
+CREATE TABLE festivales (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(255) NOT NULL,
+    tipo_festival_id UUID NOT NULL REFERENCES tipos_festival(id),
+    colegio VARCHAR(255) NOT NULL,
+    sede VARCHAR(255) NOT NULL,
+    fecha DATE NOT NULL,
+    encargado VARCHAR(255) NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
+    descripcion TEXT,
+    estado VARCHAR(20) CHECK (estado IN ('borrador', 'activo', 'completado', 'cancelado')) DEFAULT 'borrador',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Grade levels (grades)
+CREATE TABLE grados (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    festival_id UUID NOT NULL REFERENCES festivales(id) ON DELETE CASCADE,
+    nombre VARCHAR(255) NOT NULL,
+    tipo VARCHAR(10) CHECK (tipo IN ('1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°', '11°', 'TR')) NOT NULL,
+    jornada VARCHAR(10) CHECK (jornada IN ('mañana', 'tarde')) NOT NULL,
+    participantes INTEGER NOT NULL DEFAULT 0 CHECK (participantes >= 0),
+    archivo TEXT,
+    nombre_archivo VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Course levels
+CREATE TABLE cursos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    festival_id UUID NOT NULL REFERENCES festivales(id) ON DELETE CASCADE,
+    nombre VARCHAR(255) NOT NULL,
+    grado VARCHAR(255),
+    tipo VARCHAR(10) CHECK (tipo IN ('1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°', '11°', 'TR')) NOT NULL,
+    jornada VARCHAR(10) CHECK (jornada IN ('mañana', 'tarde')) NOT NULL,
+    participantes INTEGER NOT NULL DEFAULT 0 CHECK (participantes >= 0),
+    archivo TEXT,
+    nombre_archivo VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Festival blocks (calculated distribution)
+CREATE TABLE bloques (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    festival_id UUID NOT NULL REFERENCES festivales(id) ON DELETE CASCADE,
+    numero INTEGER NOT NULL,
+    jornada VARCHAR(10) CHECK (jornada IN ('mañana', 'tarde')) NOT NULL,
+    total_participantes INTEGER NOT NULL,
+    nivel1 VARCHAR(1),
+    color1 VARCHAR(7),
+    nivel2 VARCHAR(1),
+    color2 VARCHAR(7),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(festival_id, numero, jornada)
+);
+
+-- Block grades association
+CREATE TABLE bloque_grados (
+    bloque_id UUID NOT NULL REFERENCES bloques(id) ON DELETE CASCADE,
+    grado_id UUID NOT NULL REFERENCES grados(id) ON DELETE CASCADE,
+    PRIMARY KEY (bloque_id, grado_id)
+);
+
+-- Game supervisors assigned to blocks
+CREATE TABLE encargados_juegos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bloque_id UUID NOT NULL REFERENCES bloques(id) ON DELETE CASCADE,
+    juego_id UUID NOT NULL REFERENCES juegos(id),
+    encargado VARCHAR(255) NOT NULL,
+    grado VARCHAR(255),
+    ubicacion VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Exploration leaders by grade
+CREATE TABLE jefes_exploracion (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    grado_id UUID NOT NULL REFERENCES grados(id) ON DELETE CASCADE,
+    jefe1 VARCHAR(255),
+    jefe2 VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(grado_id)
+);
+
+-- Users table (organizers)
+CREATE TABLE usuarios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nombre_completo VARCHAR(255),
+    email VARCHAR(255),
+    telefono VARCHAR(20),
+    es_admin BOOLEAN DEFAULT false,
+    activo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_festivales_tipo ON festivales(tipo_festival_id);
+CREATE INDEX idx_festivales_estado ON festivales(estado);
+CREATE INDEX idx_festivales_fecha ON festivales(fecha);
+CREATE INDEX idx_grados_festival ON grados(festival_id);
+CREATE INDEX idx_cursos_festival ON cursos(festival_id);
+CREATE INDEX idx_bloques_festival ON bloques(festival_id);
+CREATE INDEX idx_bloques_jornada ON bloques(jornada);
+CREATE INDEX idx_juegos_tipo ON juegos(tipo_festival_id);
+CREATE INDEX idx_encargados_juegos_bloque ON encargados_juegos(bloque_id);
+CREATE INDEX idx_usuarios_activo ON usuarios(activo);
+
+-- Row Level Security - Allow all access for authenticated and anonymous users
+ALTER TABLE tipos_festival ENABLE ROW LEVEL SECURITY;
+ALTER TABLE juegos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE festivales ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cursos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bloques ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bloque_grados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE encargados_juegos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jefes_exploracion ENABLE ROW LEVEL SECURITY;
+ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
+
+-- Policies for tipos_festival - allow all operations
+CREATE POLICY "Allow all on tipos_festival" ON tipos_festival FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for juegos - allow all operations  
+CREATE POLICY "Allow all on juegos" ON juegos FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for festivales - allow all operations
+CREATE POLICY "Allow all on festivales" ON festivales FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for grados - allow all operations
+CREATE POLICY "Allow all on grados" ON grados FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for cursos - allow all operations
+CREATE POLICY "Allow all on cursos" ON cursos FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for bloques - allow all operations
+CREATE POLICY "Allow all on bloques" ON bloques FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for bloque_grados - allow all operations
+CREATE POLICY "Allow all on bloque_grados" ON bloque_grados FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for encargados_juegos - allow all operations
+CREATE POLICY "Allow all on encargados_juegos" ON encargados_juegos FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for jefes_exploracion - allow all operations
+CREATE POLICY "Allow all on jefes_exploracion" ON jefes_exploracion FOR ALL USING (true) WITH CHECK (true);
+
+-- Policies for usuarios - allow all operations
+CREATE POLICY "Allow all on usuarios" ON usuarios FOR ALL USING (true) WITH CHECK (true);
+</file>
+
+<file path="src/app/admin/page.tsx">
+"use client"
+
+import { useState } from "react"
+import { useUsuarios } from "@/hooks/useUsuarios"
+
+export default function AdminPage() {
+  const { usuarios, loading, agregarUsuario, eliminarUsuario, toggleActivo } = useUsuarios()
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [nuevoUsuario, setNuevoUsuario] = useState({
+    username: "",
+    password: "",
+    nombre_completo: "",
+    email: "",
+    telefono: ""
+  })
+
+  const handleCreateUsuario = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!nuevoUsuario.username || !nuevoUsuario.password) {
+      alert("Usuario y contraseña son obligatorios")
+      return
+    }
+    await agregarUsuario(nuevoUsuario)
+    setNuevoUsuario({
+      username: "",
+      password: "",
+      nombre_completo: "",
+      email: "",
+      telefono: ""
+    })
+    setShowCreateForm(false)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Gestión de Organizadores</h1>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            + Nuevo Organizador
+          </button>
+        </div>
+
+        <div className="bg-white rounded-lg shadow">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={6} className="p-4 text-center">Cargando...</td></tr>
+              ) : usuarios.length === 0 ? (
+                <tr><td colSpan={6} className="p-4 text-center text-gray-500">No hay organizadores registrados</td></tr>
+              ) : (
+                usuarios.map((u) => (
+                  <tr key={u.id} className="border-t">
+                    <td className="px-4 py-2">{u.username}</td>
+                    <td className="px-4 py-2">{u.nombre_completo || "-"}</td>
+                    <td className="px-4 py-2">{u.email || "-"}</td>
+                    <td className="px-4 py-2">{u.telefono || "-"}</td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-1 text-xs rounded ${u.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                        {u.activo ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <button
+                        onClick={() => toggleActivo(u.id)}
+                        className="text-xs mr-2 text-blue-600 hover:underline"
+                      >
+                        {u.activo ? "Desactivar" : "Activar"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("¿Eliminar este organizador?")) {
+                            eliminarUsuario(u.id)
+                          }
+                        }}
+                        className="text-xs text-red-600 hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <form onSubmit={handleCreateUsuario} className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Crear Nuevo Organizador</h2>
+            <input
+              type="text"
+              placeholder="Usuario *"
+              value={nuevoUsuario.username}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, username: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Contraseña *"
+              value={nuevoUsuario.password}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Nombre completo"
+              value={nuevoUsuario.nombre_completo}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre_completo: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={nuevoUsuario.email}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            <input
+              type="tel"
+              placeholder="Teléfono"
+              value={nuevoUsuario.telefono}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                className="px-3 py-1 border rounded"
+              >
+                Cancelar
+              </button>
+              <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded">
+                Crear
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  )
+}
+</file>
+
+<file path="src/app/register/page.tsx">
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { useUsuarios } from "@/hooks/useUsuarios"
+
+export default function RegisterPage() {
+  const { agregarUsuario } = useUsuarios()
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+    nombre_completo: "",
+    email: "",
+    telefono: ""
+  })
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (!formData.username || !formData.password || !formData.confirmPassword) {
+      setError("Todos los campos son obligatorios")
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      return
+    }
+
+    setLoading(true)
+    await agregarUsuario(formData)
+    setSuccess(true)
+    setFormData({ username: "", password: "", confirmPassword: "", nombre_completo: "", email: "", telefono: "" })
+    setLoading(false)
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md">
+          <h2 className="text-2xl font-bold text-green-600 mb-4">Registro Exitoso</h2>
+          <p className="text-gray-600 mb-4">El organizador ha sido creado correctamente.</p>
+          <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded inline-block">
+            Volver al inicio
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Registro de Organizador</h2>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <input
+          type="text"
+          placeholder="Usuario *"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Contraseña *"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Confirmar Contraseña *"
+          value={formData.confirmPassword}
+          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Nombre completo"
+          value={formData.nombre_completo}
+          onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+        />
+        <input
+          type="tel"
+          placeholder="Teléfono"
+          value={formData.telefono}
+          onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+        />
+        <button type="submit" disabled={loading} className="w-full px-3 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
+          {loading ? "Registrando..." : "Registrarse"}
+        </button>
+        <p className="text-xs text-gray-400 mt-4 text-center">
+          <Link href="/" className="text-blue-600 hover:underline">¿Ya tienes cuenta? Vuelve al inicio</Link>
+        </p>
+      </form>
+    </div>
+  )
+}
+</file>
+
+<file path="src/app/tipos-juegos/page.tsx">
+"use client"
+
+import { useState, useEffect } from "react"
+import { useTiposFestival } from "@/hooks/useTiposFestival"
+import { useJuegosPorTipo } from "@/hooks/useJuegosPorTipo"
+import Link from "next/link"
+
+export default function TiposJuegosPage() {
+  const { tipos, loading: loadingTipos, agregarTipo, eliminarTipo } = useTiposFestival()
+  const { juegosPorTipo, loading: loadingJuegos, agregarJuego, eliminarJuego } = useJuegosPorTipo(tipos)
+  const [tipoSeleccionado, setTipoSeleccionado] = useState<string>("")
+  const [nuevoTipo, setNuevoTipo] = useState("")
+  const [nuevoJuego, setNuevoJuego] = useState("")
+
+  useEffect(() => {
+    if (tipos.length > 0 && !tipoSeleccionado) {
+      setTipoSeleccionado(tipos[0])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipos])
+
+  const handleAgregarTipo = async () => {
+    if (!nuevoTipo.trim()) return
+    await agregarTipo(nuevoTipo)
+    setNuevoTipo("")
+  }
+
+  const handleAgregarJuego = async () => {
+    if (!nuevoJuego.trim() || !tipoSeleccionado) return
+    await agregarJuego(tipoSeleccionado, nuevoJuego)
+    setNuevoJuego("")
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-blue-600 hover:text-blue-800">
+              ← Festivales
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">Tipos y Juegos</h1>
+          </div>
+          <div>
+            <Link href="/admin" className="px-3 py-1 bg-blue-600 text-white rounded">
+              Gestión de Organizadores
+            </Link>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Tipos de Festival</h2>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              placeholder="Nuevo tipo..."
+              value={nuevoTipo}
+              onChange={(e) => setNuevoTipo(e.target.value)}
+              className="px-3 py-2 border rounded-lg flex-1"
+            />
+            <button onClick={handleAgregarTipo} className="px-4 py-2 bg-blue-600 text-white rounded-lg whitespace-nowrap">
+              + Agregar Tipo
+            </button>
+          </div>
+          {loadingTipos ? (
+            <p className="text-sm text-gray-500">Cargando tipos...</p>
+          ) : tipos.length === 0 ? (
+            <p className="text-sm text-gray-500">No hay tipos registrados</p>
+          ) : (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {tipos.map((tipo) => (
+                <span key={tipo} className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full text-sm">
+                  {tipo}
+                  <button onClick={async () => { await eliminarTipo(tipo) }} className="text-red-600 hover:text-red-800">✕</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Juegos por Tipo de Festival</h2>
+          <div className="flex gap-2 mb-4 items-center">
+            <select
+              value={tipoSeleccionado}
+              onChange={(e) => setTipoSeleccionado(e.target.value)}
+              className="px-3 py-2 border rounded-lg"
+            >
+              <option value="">Selecciona un tipo</option>
+              {tipos.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Nuevo juego..."
+              value={nuevoJuego}
+              onChange={(e) => setNuevoJuego(e.target.value)}
+              className="px-3 py-2 border rounded-lg flex-1"
+            />
+            <button onClick={handleAgregarJuego} className="px-4 py-2 bg-green-600 text-white rounded-lg whitespace-nowrap">
+              + Agregar Juego
+            </button>
+          </div>
+          {loadingJuegos ? (
+            <p className="text-sm text-gray-500">Cargando juegos...</p>
+          ) : tipos.length === 0 ? (
+            <p className="text-sm text-gray-500">Agrega tipos de festival primero</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tipos.map((tipo) => {
+                const lista = juegosPorTipo[tipo] ?? []
+                return (
+                  <div key={tipo} className="border rounded-lg p-3">
+                    <h4 className="font-semibold mb-2">{tipo}</h4>
+                    {lista.length === 0 ? (
+                      <p className="text-xs text-gray-500">Sin juegos</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {lista.map((juego) => (
+                          <span key={juego} className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm">
+                            {juego}
+                            <button onClick={async () => { await eliminarJuego(tipo, juego) }} className="text-red-600 hover:text-red-800">✕</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+</file>
+
+<file path="src/components/CrearFestivalForm.tsx">
+"use client"
+
+import { useState } from "react"
+import { Festival } from "@/types/festival"
+
+interface CrearFestivalFormProps {
+  onClose: () => void
+  onSave: (festival: Festival) => void
+  festival?: Festival | null
+  tipos?: string[]
+}
+
+export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: CrearFestivalFormProps) {
+  const [formulario, setFormulario] = useState({
+    nombre: festival?.nombre ?? "",
+    tipo: festival?.tipo ?? "",
+    colegio: festival?.colegio ?? "",
+    sede: festival?.sede ?? "",
+    fecha: festival?.fecha ?? "",
+    encargado: festival?.encargado ?? "",
+    telefono: festival?.telefono ?? "",
+    descripcion: festival?.descripcion ?? "",
+    estado: (festival?.estado ?? "borrador") as Festival["estado"],
+  })
+  const [errorTelefono, setErrorTelefono] = useState("")
+
+  const normalizarTelefono = (value: string) => value.replace(/\D/g, "").slice(0, 10)
+
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = normalizarTelefono(e.target.value)
+    setFormulario({ ...formulario, telefono: value })
+    if (errorTelefono && /^\d{10}$/.test(value)) {
+      setErrorTelefono("")
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formulario.nombre || !formulario.tipo || !formulario.colegio || !formulario.sede || !formulario.fecha || !formulario.encargado || !formulario.telefono) {
+      alert("Completa todos los campos obligatorios.")
+      return
+    }
+    if (!/^\d{10}$/.test(formulario.telefono)) {
+      setErrorTelefono("El teléfono debe tener exactamente 10 dígitos numéricos.")
+      return
+    }
+    setErrorTelefono("")
+    onSave({
+      id: festival?.id ?? `${Date.now()}`,
+      ...formulario,
+      grados: festival?.grados ?? [],
+      cursos: festival?.cursos ?? [],
+      encargadosJuegos: festival?.encargadosJuegos ?? {},
+      jefesExploracion: festival?.jefesExploracion ?? {},
+    })
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-bold mb-4">{festival ? "Editar Festival" : "Nuevo Festival"}</h3>
+        <input
+          type="text"
+          placeholder="Nombre *"
+          value={formulario.nombre}
+          onChange={(e) => setFormulario({ ...formulario, nombre: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <select
+          value={formulario.tipo}
+          onChange={(e) => setFormulario({ ...formulario, tipo: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        >
+          <option value="">Selecciona un tipo</option>
+          {tipos.map(t => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Colegio *"
+          value={formulario.colegio}
+          onChange={(e) => setFormulario({ ...formulario, colegio: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Sede *"
+          value={formulario.sede}
+          onChange={(e) => setFormulario({ ...formulario, sede: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="date"
+          value={formulario.fecha}
+          onChange={(e) => setFormulario({ ...formulario, fecha: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Encargado *"
+          value={formulario.encargado}
+          onChange={(e) => setFormulario({ ...formulario, encargado: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Teléfono *"
+          value={formulario.telefono}
+          onChange={handleTelefonoChange}
+          className="w-full px-3 py-2 border rounded mb-3"
+          required
+          maxLength={10}
+          minLength={10}
+        />
+        <div className="flex justify-between items-center mb-3">
+          {errorTelefono && <p className="text-red-500 text-xs">{errorTelefono}</p>}
+          <p className="text-xs text-gray-500 ml-auto">{formulario.telefono.replace(/\D/g, "").length}/10 dígitos</p>
+        </div>
+        <textarea
+          placeholder="Descripción"
+          value={formulario.descripcion}
+          onChange={(e) => setFormulario({ ...formulario, descripcion: e.target.value })}
+          className="w-full px-3 py-2 border rounded mb-3"
+        />
+        <select
+          value={formulario.estado}
+          onChange={(e) => setFormulario({ ...formulario, estado: e.target.value as Festival["estado"] })}
+          className="w-full px-3 py-2 border rounded mb-3"
+        >
+          <option value="borrador">Borrador</option>
+          <option value="activo">Activo</option>
+          <option value="completado">Completado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <div className="flex gap-2 justify-end">
+          <button type="button" onClick={onClose} className="px-3 py-1 border rounded">
+            Cancelar
+          </button>
+          <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded">
+            {festival ? "Guardar" : "Crear"}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+</file>
+
+<file path="src/components/GestionModal.tsx">
+"use client"
+
+import { useState, useRef, useEffect, Fragment } from "react"
+import { Festival, Grado } from "@/types/festival"
+import { distribuirGradosEnBloques, ordenarTipoGrado, calcularGrupos } from "@/utils/festival"
+import { supabase } from "@/lib/supabase"
+
+interface NivelBloque {
+  nivel: string
+  color: string
+}
+
+interface BloqueInfo {
+  id: string
+  niveles: NivelBloque[]
+}
+
+interface GestionModalProps {
+  festival: Festival
+  onClose: () => void
+  onUpdate: (festival: Festival, guardarBD?: boolean) => void
+  juegosPorTipo: Record<string, string[]>
+}
+
+const NIVELES = ["a", "b", "c", "d", "e", "f"]
+const MAX_NIVELES = 2
+const TIPOS_GRADO = ["1°", "2°", "3°", "4°", "5°", "6°", "7°", "8°", "9°", "10°", "11°", "TR"] as const
+const JORNADAS = ["mañana", "tarde"] as const
+const DEFAULT_COLOR = "#ffffff"
+
+export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo }: GestionModalProps) {
+  const [festivalActivo, setFestivalActivo] = useState<Festival>(festival)
+  const [modalGradoAbierto, setModalGradoAbierto] = useState(false)
+  const [gradoEditarId, setGradoEditarId] = useState<string | null>(null)
+  const [gradoForm, setGradoForm] = useState({ nombre: "", tipo: "1°" as Grado["tipo"], jornada: "mañana" as Grado["jornada"], participantes: 0, archivo: null as string | null, nombreArchivo: "" })
+  const [tabActiva, setTabActiva] = useState<"grados" | "bloques" | "encargados">("grados")
+  const [archivoGradoId, setArchivoGradoId] = useState<string | null>(null)
+  const inputArchivoRef = useRef<HTMLInputElement>(null)
+
+  const [bloquesConfig, setBloquesConfig] = useState<BloqueInfo[]>([])
+  const [juegosEncargados, setJuegosEncargados] = useState<Record<string, Array<{ juego: string; encargado: string; grado: string; ubicacion: string }>>>({})
+  const [jefesExploracion, setJefesExploracion] = useState<Record<string, string[]>>({})
+
+  useEffect(() => {
+    if (archivoGradoId && inputArchivoRef.current) inputArchivoRef.current.click()
+  }, [archivoGradoId])
+
+  const updateFestival = async (next: Festival, guardarBD: boolean = true) => {
+    setFestivalActivo(next)
+    onUpdate(next, guardarBD)
+  }
+
+  const subirExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !archivoGradoId) return
+    
+    const fileName = `festival-${festivalActivo.id}/grado-${archivoGradoId}-${file.name}`
+    
+    const { data, error } = await supabase.storage
+      .from('archivos-excel')
+      .upload(fileName, file, { upsert: true })
+    
+    if (error) {
+      console.error("Error subiendo archivo:", error)
+      alert("Error al subir archivo: " + error.message)
+    } else {
+      const { data: urlData } = supabase.storage
+        .from('archivos-excel')
+        .getPublicUrl(fileName)
+      
+      updateFestival({
+        ...festivalActivo,
+        grados: festivalActivo.grados.map(g => g.id === archivoGradoId ? { ...g, archivo: urlData.publicUrl, nombreArchivo: file.name } : g),
+      })
+    }
+    
+    setArchivoGradoId(null)
+    if (inputArchivoRef.current) inputArchivoRef.current.value = ""
+  }
+
+  const descargarExcel = (grado: Grado) => {
+    if (!grado.archivo) return
+    if (grado.archivo.startsWith('http')) {
+      window.open(grado.archivo, '_blank')
+    } else {
+      const link = document.createElement("a")
+      link.href = grado.archivo
+      link.download = grado.nombreArchivo || "listado.xlsx"
+      link.click()
+    }
+  }
+
+  const eliminarExcel = async (gradoId: string) => {
+    const grado = festivalActivo.grados.find(g => g.id === gradoId)
+    if (grado?.archivo?.startsWith('http')) {
+      const fileName = `festival-${festivalActivo.id}/grado-${gradoId}-${grado.nombreArchivo || 'archivo'}`
+      await supabase.storage.from('archivos-excel').remove([fileName])
+    }
+    updateFestival({
+      ...festivalActivo,
+      grados: festivalActivo.grados.map(g => g.id === gradoId ? { ...g, archivo: null, nombreArchivo: "" } : g),
+    }, false)
+  }
+
+  const abrirModalGrado = (grado?: Grado) => {
+    if (grado) {
+      setGradoEditarId(grado.id)
+      setGradoForm({ nombre: grado.nombre, tipo: grado.tipo, jornada: grado.jornada, participantes: grado.participantes, archivo: grado.archivo, nombreArchivo: grado.nombreArchivo })
+    } else {
+      setGradoEditarId(null)
+      setGradoForm({ nombre: "", tipo: "1°", jornada: "mañana", participantes: 0, archivo: null, nombreArchivo: "" })
+    }
+    setModalGradoAbierto(true)
+  }
+
+  const guardarGrado = () => {
+    if (!gradoForm.nombre.trim()) {
+      alert("El nombre del grado es requerido")
+      return
+    }
+    if (gradoEditarId) {
+      updateFestival({
+        ...festivalActivo,
+        grados: festivalActivo.grados.map(g => g.id === gradoEditarId ? { ...g, ...gradoForm } : g),
+      })
+    } else {
+      updateFestival({
+        ...festivalActivo,
+        grados: [...festivalActivo.grados, { id: `g${Date.now()}`, ...gradoForm }],
+      })
+    }
+    setModalGradoAbierto(false)
+  }
+
+  const eliminarGrado = (gradoId: string) => {
+    updateFestival({ ...festivalActivo, grados: festivalActivo.grados.filter(g => g.id !== gradoId) })
+  }
+
+  const totalParticipantes = festivalActivo.grados.reduce((s, g) => s + g.participantes, 0)
+  const bloquesMañana = distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "mañana"))
+  const bloquesTarde = distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "tarde"))
+  const cantidadBloques = bloquesMañana.length + bloquesTarde.length
+
+  const actualizarNivelBloque = (bloqueId: string, index: number, cambios: Partial<NivelBloque>) => {
+    setBloquesConfig(prev => {
+      const existe = prev.find(b => b.id === bloqueId)
+      if (existe) {
+        const nuevosNiveles = [...existe.niveles]
+        nuevosNiveles[index] = { ...nuevosNiveles[index], ...cambios }
+        return prev.map(b => b.id === bloqueId ? { ...b, niveles: nuevosNiveles } : b)
+      }
+      const nuevoBloque: BloqueInfo = {
+        id: bloqueId,
+        niveles: Array.from({ length: MAX_NIVELES }, (_, i) => ({
+          nivel: i === index ? cambios.nivel ?? "" : "",
+          color: i === index ? cambios.color ?? DEFAULT_COLOR : DEFAULT_COLOR,
+        })),
+      }
+      return [...prev, nuevoBloque]
+    })
+  }
+
+  const actualizarJuegoEncargado = (bloqueId: string, idx: number, campo: "juego" | "encargado" | "grado" | "ubicacion", valor: string) => {
+    setJuegosEncargados(prev => {
+      const filas = prev[bloqueId] ?? [createEmptyRow()]
+      const nuevas = [...filas]
+      nuevas[idx] = { ...nuevas[idx], [campo]: valor }
+      return { ...prev, [bloqueId]: nuevas }
+    })
+  }
+
+  const createEmptyRow = () => ({ juego: "", encargado: "", grado: "", ubicacion: "" })
+
+  const agregarFilaEncargado = (bloqueId: string) => {
+    setJuegosEncargados(prev => {
+      const filas = prev[bloqueId] ?? [createEmptyRow()]
+      return { ...prev, [bloqueId]: [...filas, createEmptyRow()] }
+    })
+  }
+
+  const eliminarFilaEncargado = (bloqueId: string, idx: number) => {
+    setJuegosEncargados(prev => {
+      const filas = prev[bloqueId] ?? [createEmptyRow()]
+      const nuevas = filas.filter((_, i) => i !== idx)
+      return { ...prev, [bloqueId]: nuevas.length > 0 ? nuevas : [createEmptyRow()] }
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Gestionar: {festivalActivo.nombre}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div className="border-b">
+          <button
+            onClick={() => setTabActiva("grados")}
+            className={`px-4 py-2 ${tabActiva === "grados" ? "border-b-2 border-purple-600" : ""}`}
+          >
+            Grados
+          </button>
+          <button
+            onClick={() => setTabActiva("bloques")}
+            className={`px-4 py-2 ${tabActiva === "bloques" ? "border-b-2 border-purple-600" : ""}`}
+          >
+            Bloques
+          </button>
+          <button
+            onClick={() => setTabActiva("encargados")}
+            className={`px-4 py-2 ${tabActiva === "encargados" ? "border-b-2 border-purple-600" : ""}`}
+          >
+            Encargados
+          </button>
+        </div>
+        <div className="p-6">
+          {tabActiva === "grados" && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Grados</h3>
+              <button onClick={() => abrirModalGrado()} className="mb-4 px-3 py-1 bg-blue-600 text-white rounded">
+                + Agregar Grado
+              </button>
+              <div className="grid gap-3">
+                {[...festivalActivo.grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo)).map(grado => {
+                  const grupos = calcularGrupos(grado.participantes)
+                  return (
+                    <div key={grado.id} className="border rounded p-3 flex justify-between items-center">
+                      <div>
+                        <strong>{grado.nombre}</strong>
+                        <span className="text-gray-500 ml-2">({grado.tipo}) · {grado.jornada} · {grado.participantes} participantes</span>
+                        <span className="text-gray-500 ml-2">· Grupos: {grupos.grupos3} de 3, {grupos.grupos2} de 2</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setArchivoGradoId(grado.id)} className="text-green-600">Subir Excel</button>
+                        {grado.archivo && (
+                          <>
+                            <button onClick={() => descargarExcel(grado)} className="text-green-700">Descargar</button>
+                            <button onClick={() => eliminarExcel(grado.id)} className="text-red-600">Eliminar archivo</button>
+                          </>
+                        )}
+                        <button onClick={() => abrirModalGrado(grado)} className="text-blue-600">Editar</button>
+                        <button onClick={() => eliminarGrado(grado.id)} className="text-red-600">Eliminar</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          {tabActiva === "bloques" && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Bloques del Festival</h3>
+              <p className="text-gray-600 mb-4">Total: {totalParticipantes} participantes · {cantidadBloques} bloques (máx. 150 por bloque) · Grados: {festivalActivo.grados.length} · Mañana: {bloquesMañana.length} · Tarde: {bloquesTarde.length}</p>
+              <div className="grid gap-3">
+                 <div>
+                   <h4 className="font-semibold mb-2">Mañana</h4>
+                   {bloquesMañana.length === 0 ? (
+                     <p className="text-sm text-gray-400 mb-3">Sin bloques</p>
+                   ) : (
+                     <div className="grid grid-cols-2 gap-3">
+                       {bloquesMañana.map(bloque => {
+                         const bloqueId = `mañana-${bloque.numero}`
+                         const config = bloquesConfig.find(b => b.id === bloqueId)
+                         const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
+                         return (
+                           <div key={bloqueId} className="border rounded-lg p-3">
+                             <div className="flex justify-between items-center mb-2">
+                               <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
+                               <span className="text-xs text-gray-500">{bloque.total} participantes</span>
+                             </div>
+                             <div className="text-xs text-gray-600 mb-2">
+                               Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
+                             </div>
+                             <div className="grid gap-1 mb-2">
+                                {niveles.map((nivelInfo, idx) => {
+                                  return (
+                                    <div key={idx} className="flex gap-1 items-center p-1.5 rounded" style={{ backgroundColor: nivelInfo.color || "#f3f4f6" }}>
+                                      <span className="text-xs font-medium w-14" style={{ color: nivelInfo.color ? "#111827" : "#6b7280" }}>Nivel {idx + 1}</span>
+                                     <select
+                                       value={nivelInfo.nivel}
+                                       onChange={(e) => actualizarNivelBloque(bloqueId, idx, { nivel: e.target.value })}
+                                       className="px-1 py-0.5 border rounded text-xs flex-1"
+                                     >
+                                       <option value="">Sin nivel</option>
+                                       {NIVELES.map(n => (
+                                         <option key={n} value={n}>{n.toUpperCase()}</option>
+                                       ))}
+                                     </select>
+                                      <input
+                                        type="color"
+                                        value={nivelInfo.color || "#000000"}
+                                        onChange={(e) => actualizarNivelBloque(bloqueId, idx, { color: e.target.value })}
+                                        className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                                        title="Seleccionar color"
+                                      />
+                                   </div>
+                                 )
+                               })}
+                             </div>
+                             <div className="grid gap-0.5">
+                               {[...bloque.grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo)).map(grado => (
+                                 <div key={grado.id} className="text-xs text-gray-700">
+                                   {grado.tipo} · {grado.nombre} — {grado.participantes} participantes
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         )
+                       })}
+                     </div>
+                   )}
+                 </div>
+                 <div>
+                   <h4 className="font-semibold mb-2">Tarde</h4>
+                   {bloquesTarde.length === 0 ? (
+                     <p className="text-sm text-gray-400 mb-3">Sin bloques</p>
+                   ) : (
+                     <div className="grid grid-cols-2 gap-3">
+                       {bloquesTarde.map(bloque => {
+                         const bloqueId = `tarde-${bloque.numero}`
+                         const config = bloquesConfig.find(b => b.id === bloqueId)
+                         const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
+                         return (
+                           <div key={bloqueId} className="border rounded-lg p-3">
+                             <div className="flex justify-between items-center mb-2">
+                               <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
+                               <span className="text-xs text-gray-500">{bloque.total} participantes</span>
+                             </div>
+                             <div className="text-xs text-gray-600 mb-2">
+                               Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
+                             </div>
+                             <div className="grid gap-1 mb-2">
+                                {niveles.map((nivelInfo, idx) => {
+                                  return (
+                                    <div key={idx} className="flex gap-1 items-center p-1.5 rounded" style={{ backgroundColor: nivelInfo.color || "#f3f4f6" }}>
+                                      <span className="text-xs font-medium w-14" style={{ color: nivelInfo.color ? "#111827" : "#6b7280" }}>Nivel {idx + 1}</span>
+                                     <select
+                                       value={nivelInfo.nivel}
+                                       onChange={(e) => actualizarNivelBloque(bloqueId, idx, { nivel: e.target.value })}
+                                       className="px-1 py-0.5 border rounded text-xs flex-1"
+                                     >
+                                       <option value="">Sin nivel</option>
+                                       {NIVELES.map(n => (
+                                         <option key={n} value={n}>{n.toUpperCase()}</option>
+                                       ))}
+                                     </select>
+                                      <input
+                                        type="color"
+                                        value={nivelInfo.color || "#000000"}
+                                        onChange={(e) => actualizarNivelBloque(bloqueId, idx, { color: e.target.value })}
+                                        className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                                        title="Seleccionar color"
+                                      />
+                                   </div>
+                                 )
+                               })}
+                             </div>
+                             <div className="grid gap-0.5">
+                               {[...bloque.grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo)).map(grado => (
+                                 <div key={grado.id} className="text-xs text-gray-700">
+                                   {grado.tipo} · {grado.nombre} — {grado.participantes} participantes
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         )
+                       })}
+                     </div>
+                   )}
+                 </div>
+              </div>
+            </div>
+          )}
+          {tabActiva === "encargados" && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Encargados</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-300 text-sm">
+                   <thead>
+                     <tr className="bg-gray-100">
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">BLOQUE</th>
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">JUEGO</th>
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">ENCARGADO</th>
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">GRADO</th>
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">UBICACIÓN</th>
+                       <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">ACCIONES</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                      {([...bloquesMañana.map(b => ({ ...b, jornada: "mañana" as const })), ...bloquesTarde.map(b => ({ ...b, jornada: "tarde" as const }))]).map((bloque) => {
+                        const bloqueId = `${bloque.jornada}-${bloque.numero}`
+                        const filasJuegos = juegosEncargados[bloqueId] ?? [createEmptyRow()]
+                        return (
+                          <Fragment key={bloqueId}>
+                            {filasJuegos.map((fila, idx) => {
+                              const isEven = idx % 2 === 0
+                              return (
+                                <tr key={`${bloqueId}-${idx}`} className={isEven ? "bg-white" : "bg-gray-50"}>
+                                  {idx === 0 && (
+                                    <td className="border border-gray-300 px-2 py-1 font-medium text-gray-800" rowSpan={filasJuegos.length + 1}>{bloque.jornada === "mañana" ? `Bloque ${bloque.numero} (Mañana)` : `Bloque ${bloque.numero} (Tarde)`}</td>
+                                  )}
+                                  <td className="border border-gray-300 px-2 py-1">
+                                    <select
+                                      value={fila.juego}
+                                      onChange={(e) => actualizarJuegoEncargado(bloqueId, idx, "juego", e.target.value)}
+                                      className="w-full border-0 p-0 bg-transparent focus:ring-0 text-gray-900"
+                                    >
+                                      <option value="">-</option>
+                                      {(juegosPorTipo[festival.tipo] ?? []).map(j => (
+                                        <option key={j} value={j}>{j}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="border border-gray-300 px-2 py-1">
+                                    <input
+                                      type="text"
+                                      value={fila.encargado}
+                                      onChange={(e) => actualizarJuegoEncargado(bloqueId, idx, "encargado", e.target.value)}
+                                      className="w-full border-0 p-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Encargado"
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-2 py-1">
+                                    <input
+                                      type="text"
+                                      value={fila.grado}
+                                      onChange={(e) => actualizarJuegoEncargado(bloqueId, idx, "grado", e.target.value)}
+                                      className="w-full border-0 p-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Grado"
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-2 py-1">
+                                    <input
+                                      type="text"
+                                      value={fila.ubicacion}
+                                      onChange={(e) => actualizarJuegoEncargado(bloqueId, idx, "ubicacion", e.target.value)}
+                                      className="w-full border-0 p-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Ubicación"
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-2 py-1 text-center">
+                                    <button onClick={() => eliminarFilaEncargado(bloqueId, idx)} className="text-red-600 hover:text-red-800">Eliminar</button>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                            <tr key={`${bloqueId}-add`} className="bg-white">
+                              <td colSpan={5} className="border border-gray-300 px-2 py-1 text-center">
+                                <button onClick={() => agregarFilaEncargado(bloqueId)} className="text-blue-600 hover:text-blue-800">+ Agregar fila</button>
+                              </td>
+                            </tr>
+                          </Fragment>
+                        )
+                      })}
+                   </tbody>
+                 </table>
+              </div>
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-4">Jefes de Exploración por Grado</h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                     <thead>
+                       <tr className="bg-gray-100">
+                         <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">GRADO</th>
+                         <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">JEFE 1</th>
+                         <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-700">JEFE 2</th>
+                       </tr>
+                     </thead>
+                    <tbody>
+                       {[...festivalActivo.grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo)).map((grado, idx) => {
+                         const isEven = idx % 2 === 0
+                         const nombres = jefesExploracion[grado.id] ?? []
+                         return (
+                           <tr key={grado.id} className={isEven ? "bg-white" : "bg-gray-50"}>
+                             <td className="border border-gray-300 px-2 py-1 font-medium text-gray-800">{grado.tipo} · {grado.nombre}</td>
+                             <td className="border border-gray-300 px-2 py-1">
+                               <input
+                                 type="text"
+                                 value={nombres[0] ?? ""}
+                                 onChange={(e) => setJefesExploracion(prev => {
+                                   const actual = prev[grado.id] ?? []
+                                   const siguiente = [...actual]
+                                   siguiente[0] = e.target.value
+                                   return { ...prev, [grado.id]: siguiente }
+                                 })}
+                                 className="w-full border-0 p-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                                 placeholder="Jefe 1"
+                               />
+                             </td>
+                             <td className="border border-gray-300 px-2 py-1">
+                               <input
+                                 type="text"
+                                 value={nombres[1] ?? ""}
+                                 onChange={(e) => setJefesExploracion(prev => {
+                                   const actual = prev[grado.id] ?? []
+                                   const siguiente = [...actual]
+                                   siguiente[1] = e.target.value
+                                   return { ...prev, [grado.id]: siguiente }
+                                 })}
+                                 className="w-full border-0 p-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                                 placeholder="Jefe 2"
+                               />
+                             </td>
+                           </tr>
+                         )
+                       })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+             </div>
+           )}
+         </div>
+ 
+       <input
+        ref={inputArchivoRef}
+        type="file"
+        accept=".xlsx,.xls"
+        onChange={subirExcel}
+        className="hidden"
+      />
+
+      {modalGradoAbierto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">{gradoEditarId ? "Editar" : "Agregar"} Grado</h3>
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={gradoForm.nombre}
+              onChange={(e) => setGradoForm({ ...gradoForm, nombre: e.target.value })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            <select
+              value={gradoForm.tipo}
+              onChange={(e) => setGradoForm({ ...gradoForm, tipo: e.target.value as typeof gradoForm.tipo })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            >
+              {TIPOS_GRADO.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <select
+              value={gradoForm.jornada}
+              onChange={(e) => setGradoForm({ ...gradoForm, jornada: e.target.value as typeof gradoForm.jornada })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            >
+              {JORNADAS.map(j => (
+                <option key={j} value={j}>{j === "mañana" ? "Mañana" : "Tarde"}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Participantes"
+              value={gradoForm.participantes}
+              onChange={(e) => setGradoForm({ ...gradoForm, participantes: parseInt(e.target.value) || 0 })}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setModalGradoAbierto(false)} className="px-3 py-1 border rounded">Cancelar</button>
+              <button onClick={guardarGrado} className="px-3 py-1 bg-blue-600 text-white rounded">
+                {gradoEditarId ? "Guardar" : "Agregar"}
+              </button>
+            </div>
+          </div>
+        </div>
+       )}
+     </div>
+  </div>
+  )
+}
+</file>
+
+<file path="src/components/LoginForm.tsx">
+"use client"
+
+import { useAuth } from "@/hooks/useAuth"
+
+export function LoginForm() {
+  const { login } = useAuth()
+
+  const handleSubmit = () => {
+    login()
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+        <h2 className="text-2xl font-bold mb-6">Acceso al Sistema</h2>
+        <p className="text-gray-600 mb-4">El sistema está en modo acceso directo.</p>
+        <button onClick={handleSubmit} className="w-full px-3 py-2 bg-blue-600 text-white rounded">
+          Entrar
+        </button>
+        <p className="text-xs text-gray-400 mt-4">
+          <a href="/admin" className="text-blue-600 hover:underline">Gestión de Organizadores</a>
+        </p>
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="src/hooks/useAuth.tsx">
+"use client"
+
+import { createContext, useContext, useState } from "react"
+
+interface AuthContextType {
+  isAuthenticated: boolean
+  loading: boolean
+  user: null
+  login: () => boolean
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated] = useState(true)
+  const [loading] = useState(false)
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, loading, user: null, login: () => true, logout: () => {} }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider")
+  return context
+}
+</file>
+
+<file path="src/hooks/useFestivales.ts">
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+import { Festival, Grado } from "@/types/festival"
+
+const GRADOS_COLUMNS_DEFAULT = [
+  "festival_id",
+  "nombre",
+  "tipo",
+  "jornada",
+  "participantes",
+  "archivo",
+  "nombre_archivo",
+]
+
+const CURSOS_COLUMNS_DEFAULT = [
+  "festival_id",
+  "nombre",
+  "grado",
+  "tipo",
+  "jornada",
+  "participantes",
+  "archivo",
+  "nombre_archivo",
+]
+
+export function useFestivales() {
+  const [festivales, setFestivales] = useState<Festival[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFestivales()
+  }, [])
+
+  const fetchFestivales = async () => {
+    setLoading(true)
+    const { data } = await supabase.from("festivales").select(`
+      *,
+      grados (*),
+      cursos (*),
+      tipos_festival (nombre)
+    `).order("created_at", { ascending: false })
+
+    const festivalesAdaptados: Festival[] = ((data || []) as any[]).map((f) => ({
+      id: f.id,
+      nombre: f.nombre,
+      tipo: f.tipos_festival?.nombre || f.tipo_festival_id,
+      colegio: f.colegio,
+      sede: f.sede,
+      fecha: f.fecha,
+      encargado: f.encargado,
+      telefono: f.telefono,
+      descripcion: f.descripcion,
+      estado: f.estado,
+      grados: (f.grados || []).map((g: any) => ({
+        id: g.id,
+        nombre: g.nombre,
+        tipo: g.tipo,
+        jornada: g.jornada,
+        participantes: g.participantes || 0,
+        archivo: g.archivo,
+        nombreArchivo: g.nombre_archivo,
+      })),
+      cursos: (f.cursos || []).map((c: any) => ({
+        id: c.id,
+        nombre: c.nombre,
+        grado: c.grado,
+        tipo: c.tipo,
+        jornada: c.jornada,
+        participantes: c.participantes || 0,
+        archivo: c.archivo,
+        nombreArchivo: c.nombre_archivo,
+      })),
+      encargadosJuegos: {},
+      jefesExploracion: {},
+    }))
+    setFestivales(festivalesAdaptados)
+    setLoading(false)
+  }
+
+  const getTipoId = async (tipoNombre: string): Promise<string | null> => {
+    const { data } = await supabase
+      .from("tipos_festival")
+      .select("id")
+      .eq("nombre", tipoNombre)
+      .single()
+    return data?.id || null
+  }
+
+  const getTableColumns = async (table: string, fallback: string[]) => {
+    try {
+      const { data, error } = await supabase.from(table).select("*").limit(1)
+      if (!error && data && data.length > 0) {
+        return Object.keys(data[0])
+      }
+    } catch (e) {
+      // ignore
+    }
+    return fallback
+  }
+
+  const buildInsertPayload = (row: Record<string, any>, allowed: string[]) => {
+    const payload: Record<string, any> = {}
+    for (const col of allowed) {
+      if (col in row && row[col] !== undefined && row[col] !== null && row[col] !== "") {
+        payload[col] = row[col]
+      }
+    }
+    return payload
+  }
+
+  const buildGradoRow = (grado: Grado, festivalId: string) => {
+    const raw = {
+      festival_id: festivalId,
+      nombre: grado.nombre,
+      tipo: grado.tipo,
+      jornada: grado.jornada,
+      participantes: grado.participantes,
+      archivo: grado.archivo,
+      nombre_archivo: grado.nombreArchivo,
+    }
+    return raw
+  }
+
+  const buildCursoRow = (curso: any, festivalId: string) => {
+    const raw = {
+      festival_id: festivalId,
+      nombre: curso.nombre,
+      grado: curso.grado,
+      tipo: curso.tipo,
+      jornada: curso.jornada,
+      participantes: curso.participantes,
+      archivo: curso.archivo,
+      nombre_archivo: curso.nombreArchivo,
+    }
+    return raw
+  }
+
+  const agregarFestival = async (festival: Festival) => {
+    const tipoId = await getTipoId(festival.tipo)
+    if (!tipoId) return
+
+    const { data, error } = await supabase.from("festivales").insert({
+      nombre: festival.nombre,
+      tipo_festival_id: tipoId,
+      colegio: festival.colegio,
+      sede: festival.sede,
+      fecha: festival.fecha,
+      encargado: festival.encargado,
+      telefono: festival.telefono,
+      descripcion: festival.descripcion,
+      estado: festival.estado,
+    }).select().single()
+
+    if (error || !data) {
+      console.error("Error creando festival:", error)
+      return
+    }
+
+    const columnasGrados = await getTableColumns("grados", GRADOS_COLUMNS_DEFAULT)
+    const columnasCursos = await getTableColumns("cursos", CURSOS_COLUMNS_DEFAULT)
+
+    for (const grado of festival.grados || []) {
+      const raw = buildGradoRow(grado, data.id)
+      const payload = buildInsertPayload(raw, columnasGrados)
+      if (Object.keys(payload).length > 0) {
+        const { error: eg } = await supabase.from("grados").insert(payload)
+        if (eg) console.error("Error insertando grado:", eg, payload)
+      }
+    }
+
+    for (const curso of festival.cursos || []) {
+      const raw = buildCursoRow(curso, data.id)
+      const payload = buildInsertPayload(raw, columnasCursos)
+      if (Object.keys(payload).length > 0) {
+        const { error: ec } = await supabase.from("cursos").insert(payload)
+        if (ec) console.error("Error insertando curso:", ec, payload)
+      }
+    }
+
+    await fetchFestivales()
+  }
+
+  const actualizarFestival = async (festival: Festival, guardarEnBD: boolean = true) => {
+    if (!guardarEnBD) {
+      setFestivales(prev => prev.map(f => f.id === festival.id ? festival : f))
+      return
+    }
+
+    const tipoId = await getTipoId(festival.tipo)
+    if (!tipoId) {
+      console.error("Tipo de festival no encontrado:", festival.tipo)
+      return
+    }
+
+    const { error: errorFestival } = await supabase.from("festivales").update({
+      nombre: festival.nombre,
+      tipo_festival_id: tipoId,
+      colegio: festival.colegio,
+      sede: festival.sede,
+      fecha: festival.fecha,
+      encargado: festival.encargado,
+      telefono: festival.telefono,
+      descripcion: festival.descripcion,
+      estado: festival.estado,
+    }).eq("id", festival.id)
+
+    if (errorFestival) {
+      console.error("Error actualizando festival:", errorFestival)
+      return
+    }
+
+    const columnasGrados = await getTableColumns("grados", GRADOS_COLUMNS_DEFAULT)
+    const columnasCursos = await getTableColumns("cursos", CURSOS_COLUMNS_DEFAULT)
+
+    const { data: gradosExistentes } = await supabase.from("grados").select("id").eq("festival_id", festival.id)
+    const idsExistentes = new Set((gradosExistentes || []).map((g: any) => g.id))
+    const idsFrontend = new Set(festival.grados.filter(g => !g.id.startsWith('g')).map(g => g.id))
+
+    for (const g of (gradosExistentes || [])) {
+      if (!idsFrontend.has(g.id)) {
+        await supabase.from("grados").delete().eq("id", g.id)
+      }
+    }
+
+    for (const grado of festival.grados) {
+      if (grado.id.startsWith('g')) {
+        const raw = buildGradoRow(grado, festival.id)
+        const payload = buildInsertPayload(raw, columnasGrados)
+        if (Object.keys(payload).length > 0) {
+          const { data: nuevoGrado, error } = await supabase.from("grados").insert(payload)
+          if (error) console.error("Error insertando grado:", error, payload)
+          else console.log("Grado insertado:", nuevoGrado)
+        }
+      } else {
+        const raw = buildGradoRow(grado, festival.id)
+        const payload = buildInsertPayload(raw, columnasGrados)
+        if (Object.keys(payload).length > 0) {
+          const { error } = await supabase.from("grados").update(payload).eq("id", grado.id)
+          if (error) console.error("Error actualizando grado:", error, payload)
+        }
+      }
+    }
+
+    for (const curso of festival.cursos) {
+      const esNuevo = curso.id.startsWith('c')
+      const raw = buildCursoRow(curso, festival.id)
+      const payload = buildInsertPayload(raw, columnasCursos)
+      if (Object.keys(payload).length === 0) continue
+
+      if (esNuevo) {
+        const { error } = await supabase.from("cursos").insert(payload)
+        if (error) console.error("Error insertando curso:", error, payload)
+      } else {
+        const { error } = await supabase.from("cursos").update(payload).eq("id", curso.id)
+        if (error) console.error("Error actualizando curso:", error, payload)
+      }
+    }
+
+    await fetchFestivales()
+  }
+
+  const eliminarFestival = async (id: string) => {
+    const { error } = await supabase.from("festivales").delete().eq("id", id)
+    if (error) {
+      console.error("Error eliminando festival:", error)
+      return
+    }
+    await fetchFestivales()
+  }
+
+  return { festivales, loading, agregarFestival, actualizarFestival, eliminarFestival, fetchFestivales }
+}
+</file>
+
+<file path="src/hooks/useJuegosPorTipo.ts">
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+
+type JuegosPorTipo = Record<string, string[]>
+
+export function useJuegosPorTipo(tipos: string[] = []) {
+  const [juegosPorTipo, setJuegosPorTipo] = useState<JuegosPorTipo>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchJuegos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipos])
+
+  const fetchJuegos = async () => {
+    setLoading(true)
+    const { data } = await supabase.from("juegos").select(`
+      nombre,
+      tipo_festival_id
+    `).order("nombre")
+    
+    // Obtener tipos por ID para mapear los IDs a nombres
+    const { data: tiposData } = await supabase.from("tipos_festival").select("id, nombre")
+    const idToNombre = new Map<string, string>()
+    for (const t of (tiposData || [])) {
+      idToNombre.set(t.id, t.nombre)
+    }
+    
+    const grouped: JuegosPorTipo = {}
+    for (const tipo of tipos) {
+      grouped[tipo] = []
+    }
+    
+    for (const juego of (data as any[]) || []) {
+      const tipoNombre = idToNombre.get(juego.tipo_festival_id) || juego.tipo_festival_id
+      if (!grouped[tipoNombre]) {
+        grouped[tipoNombre] = []
+      }
+      grouped[tipoNombre].push(juego.nombre)
+    }
+    
+    setJuegosPorTipo(grouped)
+    setLoading(false)
+  }
+
+  const agregarJuego = async (tipo: string, nombre: string) => {
+    const limpio = nombre.trim()
+    if (!limpio) return
+    
+    const tipoId = await getTipoId(tipo)
+    if (!tipoId) {
+      console.error("Tipo no encontrado:", tipo)
+      return
+    }
+    
+    // Verificar si ya existe
+    const { data: existe } = await supabase
+      .from("juegos")
+      .select("id")
+      .eq("nombre", limpio)
+      .eq("tipo_festival_id", tipoId)
+      .single()
+    
+    if (existe) {
+      console.log("El juego ya existe para este tipo")
+      return
+    }
+    
+    const { error } = await supabase.from("juegos").insert({
+      nombre: limpio,
+      tipo_festival_id: tipoId,
+    })
+    
+    if (error) {
+      console.error("Error agregando juego:", error.message || error.details || JSON.stringify(error))
+    } else {
+      await fetchJuegos()
+    }
+  }
+
+  const getTipoId = async (tipoNombre: string): Promise<string | null> => {
+    const { data } = await supabase
+      .from("tipos_festival")
+      .select("id")
+      .eq("nombre", tipoNombre)
+      .single()
+    return data?.id || null
+  }
+
+  const eliminarJuego = async (tipo: string, nombre: string) => {
+    const tipoId = await getTipoId(tipo)
+    if (!tipoId) return
+    
+    await supabase.from("juegos").delete().eq("nombre", nombre).eq("tipo_festival_id", tipoId)
+    await fetchJuegos()
+  }
+
+  return { juegosPorTipo, loading, agregarJuego, eliminarJuego, refetch: fetchJuegos }
+}
+</file>
+
+<file path="src/hooks/useTiposFestival.ts">
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+
+export function useTiposFestival() {
+  const [tipos, setTipos] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchTipos()
+  }, [])
+
+  const fetchTipos = async () => {
+    setLoading(true)
+    const { data } = await supabase.from("tipos_festival").select("nombre").order("nombre")
+    setTipos(data?.map((t: { nombre: string }) => t.nombre) || [])
+    setLoading(false)
+  }
+
+  const agregarTipo = async (nombre: string) => {
+    const limpio = nombre.trim()
+    if (!limpio) return
+    
+    const { error } = await supabase.from("tipos_festival").insert({ nombre: limpio })
+    if (error) {
+      console.error("Error agregando tipo:", error)
+    } else {
+      await fetchTipos()
+    }
+  }
+
+  const eliminarTipo = async (nombre: string) => {
+    await supabase.from("tipos_festival").delete().eq("nombre", nombre)
+    await fetchTipos()
+  }
+
+  return { tipos, loading, agregarTipo, eliminarTipo }
+}
+</file>
+
+<file path="src/hooks/useUsuarios.tsx">
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+
+type Usuario = {
+  id: string
+  username: string
+  nombre_completo?: string
+  email?: string
+  telefono?: string
+  es_admin: boolean
+  activo: boolean
+}
+
+export function useUsuarios() {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUsuarios()
+  }, [])
+
+  const fetchUsuarios = async () => {
+    setLoading(true)
+    const { data } = await supabase.from("usuarios").select("*").eq("es_admin", false).eq("activo", true)
+    setUsuarios(data || [])
+    setLoading(false)
+  }
+
+  const agregarUsuario = async (nuevo: { username: string; password: string; nombre_completo?: string; email?: string; telefono?: string }) => {
+    const { data } = await supabase.from("usuarios").insert({
+      username: nuevo.username,
+      password: nuevo.password,
+      nombre_completo: nuevo.nombre_completo,
+      email: nuevo.email,
+      telefono: nuevo.telefono,
+      es_admin: false,
+      activo: true
+    } as any)
+
+    if (data) {
+      await fetchUsuarios()
+    }
+  }
+
+  const eliminarUsuario = async (id: string) => {
+    await supabase.from("usuarios").delete().eq("id", id)
+    await fetchUsuarios()
+  }
+
+  const toggleActivo = async (id: string) => {
+    const usuario = usuarios.find(u => u.id === id)
+    if (usuario) {
+      await supabase.from("usuarios").update({ activo: !usuario.activo }).eq("id", id)
+      await fetchUsuarios()
+    }
+  }
+
+  return { usuarios, loading, agregarUsuario, eliminarUsuario, toggleActivo }
+}
+</file>
+
+<file path="src/lib/supabase.ts">
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+</file>
+
+<file path="src/types/festival.ts">
+export interface Grado {
+  id: string
+  nombre: string
+  tipo: "1°" | "2°" | "3°" | "4°" | "5°" | "6°" | "7°" | "8°" | "9°" | "10°" | "11°" | "TR"
+  jornada: "mañana" | "tarde"
+  participantes: number
+  archivo: string | null
+  nombreArchivo: string
+}
+
+export interface Curso {
+  id: string
+  nombre: string
+  grado: string
+  tipo: Grado["tipo"]
+  jornada: Grado["jornada"]
+  participantes: number
+  archivo: string | null
+  nombreArchivo: string
+}
+
+export interface Festival {
+  id: string
+  nombre: string
+  tipo: string
+  colegio: string
+  sede: string
+  fecha: string
+  encargado: string
+  telefono: string
+  descripcion: string
+  estado: "borrador" | "activo" | "completado" | "cancelado"
+  grados: Grado[]
+  cursos: Curso[]
+  encargadosJuegos: Record<string, Array<{ juego: string; encargado: string; grado: string; ubicacion: string }>>
+  jefesExploracion: Record<string, string[]>
+}
+</file>
+
+<file path="src/utils/festival.ts">
+import { Curso, Grado } from "@/types/festival"
+
+interface BloqueGrado {
+  numero: number
+  grados: Grado[]
+  total: number
+}
+
+interface BloqueCurso {
+  numero: number
+  cursos: Curso[]
+  total: number
+}
+
+export function generarBloques(participantes: number) {
+  const bloques: { numero: number }[] = []
+  let contadorBloque = 1
+  let restantes = participantes
+
+  while (restantes > 0) {
+    bloques.push({ numero: contadorBloque++ })
+    restantes -= 150
+  }
+
+  return bloques
+}
+
+export function distribuirCursosEnBloques(cursos: Curso[], capacidad = 150) {
+  const ordenados = [...cursos].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo))
+  const bloques: BloqueCurso[] = []
+  let actual = { numero: 1, cursos: [] as Curso[], total: 0 }
+
+  for (const curso of ordenados) {
+    if (actual.total + curso.participantes > capacidad && actual.cursos.length > 0) {
+      bloques.push(actual)
+      actual = { numero: bloques.length + 1, cursos: [] as Curso[], total: 0 }
+    }
+    actual.cursos.push(curso)
+    actual.total += curso.participantes
+  }
+  if (actual.cursos.length > 0) bloques.push(actual)
+  return bloques
+}
+
+export function distribuirGradosEnBloques(grados: Grado[], capacidad = 150) {
+  const ordenados = [...grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo))
+  const bloques: BloqueGrado[] = []
+  let actual = { numero: 1, grados: [] as Grado[], total: 0 }
+
+  for (const grado of ordenados) {
+    if (actual.total + grado.participantes > capacidad && actual.grados.length > 0) {
+      bloques.push(actual)
+      actual = { numero: bloques.length + 1, grados: [] as Grado[], total: 0 }
+    }
+    actual.grados.push(grado)
+    actual.total += grado.participantes
+  }
+  if (actual.grados.length > 0) bloques.push(actual)
+  return bloques
+}
+
+export function ordenarTipoGrado(tipo: Grado["tipo"]) {
+  const orden: Record<Grado["tipo"], number> = {
+    "TR": 0,
+    "1°": 1, "2°": 2, "3°": 3, "4°": 4, "5°": 5, "6°": 6,
+    "7°": 7, "8°": 8, "9°": 9, "10°": 10, "11°": 11,
+  }
+  return orden[tipo]
+}
+
+export function calcularGrupos(participantes: number) {
+  if (participantes <= 0) return { grupos3: 0, grupos2: 0, total: 0 }
+  const resto = participantes % 3
+  if (resto === 0) return { grupos3: participantes / 3, grupos2: 0, total: participantes / 3 }
+  if (resto === 1) {
+    if (participantes >= 4) {
+      const grupos3 = (participantes - 4) / 3
+      return { grupos3, grupos2: 2, total: grupos3 + 2 }
+    }
+    return { grupos3: 0, grupos2: 0, total: 0 }
+  }
+  const grupos3 = Math.floor(participantes / 3)
+  return { grupos3, grupos2: 1, total: grupos3 + 1 }
+}
+</file>
+
+<file path="<arg_value>CONTENT">
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
+import { LoginForm } from "./LoginForm"
+
+export function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user, logout } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const [currentPath, setCurrentPath] = useState("")
+
+  useEffect(() => {
+    setMounted(true)
+    setCurrentPath(window.location.pathname)
+  }, [])
+
+  if (!mounted) return null
+  if (!isAuthenticated) return <LoginForm />
+  
+  if (currentPath.startsWith("/admin") && !user?.es_admin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Acceso Denegado</h2>
+          <p className="text-gray-600 mb-4">Solo los administradores pueden acceder a esta pagina.</p>
+          <button onClick={logout} className="px-4 py-2 bg-blue-600 text-white rounded">
+            Cerrar sesion
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+</file>
+
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+</file>
+
+<file path="src/app/layout.tsx">
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistSansMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Gestor de Festivales",
+  description: "Aplicación para gestionar festivales escolares",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistSansMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">
+        {children}
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+"use client"
+
+import { useState } from "react"
+import { Festival } from "@/types/festival"
+import { GestionModal } from "@/components/GestionModal"
+import { CrearFestivalForm } from "@/components/CrearFestivalForm"
+import { generarBloques } from "@/utils/festival"
+import { useFestivales } from "@/hooks/useFestivales"
+import { useTiposFestival } from "@/hooks/useTiposFestival"
+import { useJuegosPorTipo } from "@/hooks/useJuegosPorTipo"
+import Link from "next/link"
+
+export default function Home() {
+  const { festivales, loading, agregarFestival, actualizarFestival, eliminarFestival: eliminarFestivalDB } = useFestivales()
+  const { tipos, loading: loadingTipos } = useTiposFestival()
+  const { juegosPorTipo, loading: loadingJuegos } = useJuegosPorTipo(tipos)
+  const [festivalActivo, setFestivalActivo] = useState<Festival | null>(null)
+  const [busqueda, setBusqueda] = useState("")
+  const [modalCrearAbierto, setModalCrearAbierto] = useState(false)
+  const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
+  const [festivalEditar, setFestivalEditar] = useState<Festival | null>(null)
+
+  const abrirGestionGrados = (festival: Festival) => {
+    setFestivalActivo(festival)
+  }
+
+  const cerrarGestionGrados = () => {
+    setFestivalActivo(null)
+  }
+
+  const abrirEditarFestival = (festival: Festival) => {
+    setFestivalEditar(festival)
+    setModalEditarAbierto(true)
+  }
+
+  const guardarEdicion = async (festivalActualizado: Festival) => {
+    await actualizarFestival(festivalActualizado)
+    setModalEditarAbierto(false)
+    setFestivalEditar(null)
+    if (festivalActivo?.id === festivalActualizado.id) setFestivalActivo(festivalActualizado)
+  }
+
+  const eliminarFestival = async (id: string) => {
+    if (confirm("¿Estás seguro de eliminar este festival?")) {
+      await eliminarFestivalDB(id)
+      if (festivalActivo?.id === id) setFestivalActivo(null)
+    }
+  }
+
+  const festivalesFiltrados = festivales.filter(f =>
+    f.nombre.toLowerCase().includes(busqueda.toLowerCase()) || f.colegio.toLowerCase().includes(busqueda.toLowerCase())
+  )
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case "activo": return "bg-green-100 text-green-800"
+      case "borrador": return "bg-gray-100 text-gray-800"
+      case "completado": return "bg-blue-100 text-blue-800"
+      case "cancelado": return "bg-red-100 text-red-800"
+      default: return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  if (loading || loadingTipos || loadingJuegos) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Cargando...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Link href="/tipos-juegos" className="text-blue-600 hover:text-blue-800">
+              Tipos y Juegos
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">Festivales</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="/admin" className="text-blue-600 hover:text-blue-800">Gestión de Organizadores</a>
+            <a href="/register" className="text-blue-600 hover:text-blue-800">Registrar Organizador</a>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex gap-2 mb-6">
+          <input
+            type="text"
+            placeholder="Buscar festival..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="px-4 py-2 border rounded-lg w-full sm:w-64"
+          />
+          <button
+            onClick={() => setModalCrearAbierto(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg whitespace-nowrap"
+          >
+            + Nuevo Festival
+          </button>
+        </div>
+        {festivalesFiltrados.length === 0 ? (
+          <div className="text-center py-12">No se encontraron festivales</div>
+        ) : (
+          <div className="grid gap-4">
+            {festivalesFiltrados.map((festival) => {
+              const totalParticipantes = festival.grados.reduce((s, g) => s + g.participantes, 0)
+              const totalBloques = generarBloques(totalParticipantes).length
+              return (
+                <div key={festival.id} className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-semibold">{festival.nombre}</h3>
+                      <p className="text-gray-600">{festival.colegio}</p>
+                      <div className="text-sm text-gray-500 mt-2">
+                        {festival.grados.length} grados · {totalParticipantes} participantes · {totalBloques} bloques
+                      </div>
+                      <span className={`inline-block mt-2 px-2 py-1 rounded text-xs ${getEstadoColor(festival.estado)}`}>
+                        {festival.estado}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => abrirEditarFestival(festival)} className="px-3 py-1 bg-yellow-100 rounded">
+                        Editar
+                      </button>
+                      <button onClick={() => abrirGestionGrados(festival)} className="px-3 py-1 bg-purple-100 rounded">
+                        Gestionar
+                      </button>
+                      <button onClick={() => eliminarFestival(festival.id)} className="px-3 py-1 bg-red-100 rounded text-red-700">
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </main>
+
+      {festivalActivo && (
+        <GestionModal
+          festival={festivalActivo}
+          onClose={cerrarGestionGrados}
+          onUpdate={async (updated) => {
+            await actualizarFestival(updated)
+            setFestivalActivo(updated)
+          }}
+          juegosPorTipo={juegosPorTipo}
+        />
+      )}
+
+      {modalCrearAbierto && (
+        <CrearFestivalForm
+          onClose={() => setModalCrearAbierto(false)}
+          onSave={async (festival) => {
+            await agregarFestival(festival)
+            setModalCrearAbierto(false)
+          }}
+          tipos={tipos}
+        />
+      )}
+
+      {modalEditarAbierto && festivalEditar && (
+        <CrearFestivalForm
+          festival={festivalEditar}
+          onClose={() => { setModalEditarAbierto(false); setFestivalEditar(null); }}
+          onSave={guardarEdicion}
+          tipos={tipos}
+        />
+      )}
+    </div>
+  )
+}
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="package.json">
+{
+  "name": "gestor-festivales",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

@@ -1,0 +1,35 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
+import { LoginForm } from "./LoginForm"
+
+export function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user, logout } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const [currentPath, setCurrentPath] = useState("")
+
+  useEffect(() => {
+    setMounted(true)
+    setCurrentPath(window.location.pathname)
+  }, [])
+
+  if (!mounted) return null
+  if (!isAuthenticated) return <LoginForm />
+  
+  if (currentPath.startsWith("/admin") && !user?.es_admin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Acceso Denegado</h2>
+          <p className="text-gray-600 mb-4">Solo los administradores pueden acceder a esta pagina.</p>
+          <button onClick={logout} className="px-4 py-2 bg-blue-600 text-white rounded">
+            Cerrar sesion
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
