@@ -36,6 +36,9 @@ export default function TiposJuegosPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+              Dashboard
+            </Link>
             <Link href="/" className="text-blue-600 hover:text-blue-800">
               ← Festivales
             </Link>

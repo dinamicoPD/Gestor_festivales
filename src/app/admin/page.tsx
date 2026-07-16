@@ -1,7 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useUsuarios } from "@/hooks/useUsuarios"
+
+export const dynamic = 'force-dynamic'
 
 export default function AdminPage() {
   const { usuarios, loading, agregarUsuario, eliminarUsuario, toggleActivo } = useUsuarios()
@@ -35,7 +38,12 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Organizadores</h1>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+              Dashboard
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">Gestión de Organizadores</h1>
+          </div>
           <button
             onClick={() => setShowCreateForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

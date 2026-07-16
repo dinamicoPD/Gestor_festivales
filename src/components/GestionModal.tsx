@@ -38,7 +38,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
   const [modalGradoAbierto, setModalGradoAbierto] = useState(false)
   const [gradoEditarId, setGradoEditarId] = useState<string | null>(null)
   const [gradoForm, setGradoForm] = useState({ nombre: "", tipo: "1°" as Grado["tipo"], jornada: "mañana" as Grado["jornada"], participantes: 0, archivo: null as string | null, nombreArchivo: "" })
-  const [tabActiva, setTabActiva] = useState<"grados" | "bloques" | "encargados">("grados")
+  const [tabActiva, setTabActiva] = useState<"grados" | "bloques" | "encargados" | "adicionales">("grados")
   const inputDriveRef = useRef<HTMLInputElement>(null)
 
   const [editandoDriveId, setEditandoDriveId] = useState<string | null>(null)
@@ -49,6 +49,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
   const [guardandoBloques, setGuardandoBloques] = useState(false)
   const [guardandoEncargados, setGuardandoEncargados] = useState(false)
   const [guardandoJefes, setGuardandoJefes] = useState(false)
+  const [guardandoAdicionales, setGuardandoAdicionales] = useState(false)
   const [juegosEncargados, setJuegosEncargados] = useState<Record<string, Array<{ juego: string; encargado: string; grado: string; ubicacion: string }>>>({})
   const [jefesExploracion, setJefesExploracion] = useState<Record<string, string[]>>({})
 
@@ -226,6 +227,26 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
     }
   }
 
+  const handleGuardarAdicionales = async () => {
+    if (!festivalActivo.id) return
+    setGuardandoAdicionales(true)
+    try {
+      const { error } = await supabase.from("festivales").update({
+        diplomas_entregados: festivalActivo.diplomas_entregados,
+        pruebas_presentadas: festivalActivo.pruebas_presentadas,
+        calificaciones_entregadas: festivalActivo.calificaciones_entregadas,
+      }).eq("id", festivalActivo.id)
+
+      if (error) throw error
+      alert("Datos adicionales guardados correctamente")
+    } catch (err: any) {
+      console.error("Error guardando adicionales:", err)
+      alert("Error al guardar datos adicionales: " + (err.message || JSON.stringify(err)))
+    } finally {
+      setGuardandoAdicionales(false)
+    }
+  }
+
   const updateFestival = async (next: Festival, guardarBD: boolean = true) => {
     setFestivalActivo(next)
     if (guardarBD) {
@@ -255,6 +276,12 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
             telefono: actualizado.telefono,
             descripcion: actualizado.descripcion,
             estado: actualizado.estado,
+            estado_pago: actualizado.estado_pago,
+            fecha_capacitacion: actualizado.fecha_capacitacion,
+            encargado_capacitacion: actualizado.encargado_capacitacion,
+            diplomas_entregados: actualizado.diplomas_entregados,
+            pruebas_presentadas: actualizado.pruebas_presentadas,
+            calificaciones_entregadas: actualizado.calificaciones_entregadas,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             grados: (actualizado.grados || []).map((g: any) => ({
               id: g.id,
@@ -448,6 +475,12 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
             className={`px-4 py-2 ${tabActiva === "encargados" ? "border-b-2 border-purple-600" : ""}`}
           >
             Encargados
+          </button>
+          <button
+            onClick={() => setTabActiva("adicionales")}
+            className={`px-4 py-2 ${tabActiva === "adicionales" ? "border-b-2 border-purple-600" : ""}`}
+          >
+            Adicionales
           </button>
         </div>
         <div className="p-6">
@@ -778,11 +811,50 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                   </table>
                 </div>
               </div>
-             </div>
-           )}
-         </div>
+              </div>
+            )}
+            {tabActiva === "adicionales" && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Datos Adicionales del Festival</h3>
+                  <button onClick={handleGuardarAdicionales} disabled={guardandoAdicionales} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                    {guardandoAdicionales ? "Guardando..." : "Guardar Adicionales"}
+                  </button>
+                </div>
+                <div className="grid gap-3 max-w-md">
+                  <label className="flex items-center gap-3 p-3 border rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={festivalActivo.diplomas_entregados}
+                      onChange={(e) => setFestivalActivo({ ...festivalActivo, diplomas_entregados: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Diplomas entregados</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={festivalActivo.pruebas_presentadas}
+                      onChange={(e) => setFestivalActivo({ ...festivalActivo, pruebas_presentadas: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Pruebas presentadas</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={festivalActivo.calificaciones_entregadas}
+                      onChange={(e) => setFestivalActivo({ ...festivalActivo, calificaciones_entregadas: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Calificaciones entregadas</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
  
-        {modalGradoAbierto && (
+         {modalGradoAbierto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">{gradoEditarId ? "Editar" : "Agregar"} Grado</h3>

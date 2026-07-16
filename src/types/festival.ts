@@ -30,6 +30,12 @@ export interface Festival {
   telefono: string
   descripcion: string
   estado: "borrador" | "activo" | "completado" | "cancelado"
+  estado_pago: "pendiente" | "pagado"
+  fecha_capacitacion: string | null
+  encargado_capacitacion: string | null
+  diplomas_entregados: boolean
+  pruebas_presentadas: boolean
+  calificaciones_entregadas: boolean
   grados: Grado[]
   cursos: Curso[]
   bloques: Array<{

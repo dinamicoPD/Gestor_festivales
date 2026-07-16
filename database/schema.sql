@@ -39,6 +39,12 @@ CREATE TABLE festivales (
     telefono VARCHAR(20) NOT NULL,
     descripcion TEXT,
     estado VARCHAR(20) CHECK (estado IN ('borrador', 'activo', 'completado', 'cancelado')) DEFAULT 'borrador',
+    estado_pago VARCHAR(20) CHECK (estado_pago IN ('pendiente', 'pagado')) DEFAULT 'pendiente',
+    fecha_capacitacion DATE,
+    encargado_capacitacion VARCHAR(255),
+    diplomas_entregados BOOLEAN DEFAULT false,
+    pruebas_presentadas BOOLEAN DEFAULT false,
+    calificaciones_entregadas BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

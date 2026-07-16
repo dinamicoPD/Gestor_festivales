@@ -21,6 +21,9 @@ export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: Cre
     telefono: festival?.telefono ?? "",
     descripcion: festival?.descripcion ?? "",
     estado: (festival?.estado ?? "borrador") as Festival["estado"],
+    estado_pago: (festival?.estado_pago ?? "pendiente") as Festival["estado_pago"],
+    fecha_capacitacion: festival?.fecha_capacitacion ?? "",
+    encargado_capacitacion: festival?.encargado_capacitacion ?? "",
   })
   const [errorTelefono, setErrorTelefono] = useState("")
 
@@ -53,6 +56,12 @@ export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: Cre
       bloques: festival?.bloques ?? [],
       encargadosJuegos: festival?.encargadosJuegos ?? {},
       jefesExploracion: festival?.jefesExploracion ?? {},
+      fecha_capacitacion: formulario.fecha_capacitacion || null,
+      encargado_capacitacion: formulario.encargado_capacitacion || null,
+      estado_pago: formulario.estado_pago,
+      diplomas_entregados: festival?.diplomas_entregados ?? false,
+      pruebas_presentadas: festival?.pruebas_presentadas ?? false,
+      calificaciones_entregadas: festival?.calificaciones_entregadas ?? false,
     })
     onClose()
   }
@@ -103,6 +112,22 @@ export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: Cre
           className="w-full px-3 py-2 border rounded mb-3"
           required
         />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <input
+            type="date"
+            placeholder="Fecha de capacitación"
+            value={formulario.fecha_capacitacion}
+            onChange={(e) => setFormulario({ ...formulario, fecha_capacitacion: e.target.value })}
+            className="w-full px-3 py-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Encargado de capacitación"
+            value={formulario.encargado_capacitacion}
+            onChange={(e) => setFormulario({ ...formulario, encargado_capacitacion: e.target.value })}
+            className="w-full px-3 py-2 border rounded"
+          />
+        </div>
         <input
           type="text"
           placeholder="Encargado *"
@@ -141,6 +166,17 @@ export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: Cre
           <option value="completado">Completado</option>
           <option value="cancelado">Cancelado</option>
         </select>
+        <div className="border-t pt-3 mb-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Información financiera</h4>
+          <select
+            value={formulario.estado_pago}
+            onChange={(e) => setFormulario({ ...formulario, estado_pago: e.target.value as Festival["estado_pago"] })}
+            className="w-full px-3 py-2 border rounded"
+          >
+            <option value="pendiente">Pendiente</option>
+            <option value="pagado">Pagado</option>
+          </select>
+        </div>
         <div className="flex gap-2 justify-end">
           <button type="button" onClick={onClose} className="px-3 py-1 border rounded">
             Cancelar

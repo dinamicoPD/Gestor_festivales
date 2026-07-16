@@ -79,6 +79,9 @@ export default function Home() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+              Dashboard
+            </Link>
             <Link href="/tipos-juegos" className="text-blue-600 hover:text-blue-800">
               Tipos y Juegos
             </Link>
@@ -121,6 +124,18 @@ export default function Home() {
                       <p className="text-gray-600">{festival.colegio}</p>
                       <div className="text-sm text-gray-500 mt-2">
                         {festival.grados.length} grados · {totalParticipantes} participantes · {totalBloques} bloques
+                      </div>
+                      {(festival.fecha_capacitacion || festival.encargado_capacitacion) && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          {festival.fecha_capacitacion && <span>Capacitación: {festival.fecha_capacitacion}</span>}
+                          {festival.fecha_capacitacion && festival.encargado_capacitacion && <span> · </span>}
+                          {festival.encargado_capacitacion && <span>Encargado: {festival.encargado_capacitacion}</span>}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span className="font-medium">Pago:</span>{" "}
+                        {festival.estado_pago === "pagado" && <span className="text-green-700">Pagado</span>}
+                        {festival.estado_pago === "pendiente" && <span className="text-red-700">Pendiente</span>}
                       </div>
                       <span className={`inline-block mt-2 px-2 py-1 rounded text-xs ${getEstadoColor(festival.estado)}`}>
                         {festival.estado}

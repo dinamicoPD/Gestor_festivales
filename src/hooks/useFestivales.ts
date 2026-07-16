@@ -37,6 +37,12 @@ export function useFestivales() {
       telefono: f.telefono,
       descripcion: f.descripcion,
       estado: f.estado,
+      estado_pago: f.estado_pago,
+      fecha_capacitacion: f.fecha_capacitacion,
+      encargado_capacitacion: f.encargado_capacitacion,
+      diplomas_entregados: f.diplomas_entregados,
+      pruebas_presentadas: f.pruebas_presentadas,
+      calificaciones_entregadas: f.calificaciones_entregadas,
       grados: (f.grados || []).map((g: any) => ({
         id: g.id,
         nombre: g.nombre,
@@ -101,6 +107,12 @@ export function useFestivales() {
       telefono: data.telefono,
       descripcion: data.descripcion,
       estado: data.estado,
+      estado_pago: data.estado_pago,
+      fecha_capacitacion: data.fecha_capacitacion,
+      encargado_capacitacion: data.encargado_capacitacion,
+      diplomas_entregados: data.diplomas_entregados,
+      pruebas_presentadas: data.pruebas_presentadas,
+      calificaciones_entregadas: data.calificaciones_entregadas,
       grados: (data.grados || []).map((g: any) => ({
         id: g.id,
         nombre: g.nombre,
@@ -357,6 +369,12 @@ export function useFestivales() {
       telefono: festival.telefono,
       descripcion: festival.descripcion,
       estado: festival.estado,
+      estado_pago: festival.estado_pago || "pendiente",
+      fecha_capacitacion: festival.fecha_capacitacion || null,
+      encargado_capacitacion: festival.encargado_capacitacion || null,
+      diplomas_entregados: festival.diplomas_entregados || false,
+      pruebas_presentadas: festival.pruebas_presentadas || false,
+      calificaciones_entregadas: festival.calificaciones_entregadas || false,
     }).select().single()
 
     if (error || !data) {
@@ -407,6 +425,12 @@ export function useFestivales() {
       telefono: festival.telefono,
       descripcion: festival.descripcion,
       estado: festival.estado,
+      estado_pago: festival.estado_pago || "pendiente",
+      fecha_capacitacion: festival.fecha_capacitacion || null,
+      encargado_capacitacion: festival.encargado_capacitacion || null,
+      diplomas_entregados: festival.diplomas_entregados || false,
+      pruebas_presentadas: festival.pruebas_presentadas || false,
+      calificaciones_entregadas: festival.calificaciones_entregadas || false,
     }).eq("id", festival.id)
 
     if (errorFestival) {
