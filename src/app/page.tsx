@@ -122,7 +122,7 @@ export default function Home() {
                     <div>
                       <h3 className="text-xl font-semibold">{festival.nombre}</h3>
                       <p className="text-gray-600">{festival.colegio}</p>
-                      <div className="text-sm text-gray-500 mt-2">
+                      <div className="text-sm text-gray-600 mt-2">
                         {festival.grados.length} grados · {totalParticipantes} participantes · {totalBloques} bloques
                       </div>
                       {(festival.fecha_capacitacion || festival.encargado_capacitacion) && (

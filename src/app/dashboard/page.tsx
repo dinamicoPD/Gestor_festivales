@@ -111,7 +111,7 @@ export default function DashboardPage() {
                 Hoy
               </button>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-600">
               {festivalesDelMes.length} festival{festivalesDelMes.length !== 1 ? "es" : ""} este mes
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                       <div>
                         <h4 className="font-semibold">{f.nombre}</h4>
                         <p className="text-sm text-gray-600">{f.colegio} · {f.sede}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600">
                           {f.fecha && new Date(f.fecha + "T00:00:00").toLocaleDateString("es-ES", {
                             weekday: "long",
                             year: "numeric",
@@ -202,7 +202,7 @@ export default function DashboardPage() {
           )}
 
           {festivalesDelMes.length === 0 && (
-            <div className="mt-6 text-center py-8 text-gray-500">
+            <div className="mt-6 text-center py-8 text-gray-600">
               No hay festivales programados para este mes
             </div>
           )}

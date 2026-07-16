@@ -56,19 +56,19 @@ export default function AdminPage() {
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Usuario</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Nombre</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Email</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Teléfono</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Estado</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td colSpan={6} className="p-4 text-center">Cargando...</td></tr>
               ) : usuarios.length === 0 ? (
-                <tr><td colSpan={6} className="p-4 text-center text-gray-500">No hay organizadores registrados</td></tr>
+                <tr><td colSpan={6} className="p-4 text-center text-gray-600">No hay organizadores registrados</td></tr>
               ) : (
                 usuarios.map((u) => (
                   <tr key={u.id} className="border-t">

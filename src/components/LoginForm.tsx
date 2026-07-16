@@ -17,7 +17,7 @@ export function LoginForm() {
         <button onClick={handleSubmit} className="w-full px-3 py-2 bg-blue-600 text-white rounded">
           Entrar
         </button>
-        <p className="text-xs text-gray-400 mt-4">
+        <p className="text-xs text-gray-500 mt-4">
           <a href="/admin" className="text-blue-600 hover:underline">Gestión de Organizadores</a>
         </p>
       </div>

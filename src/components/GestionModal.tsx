@@ -455,7 +455,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b flex justify-between items-center">
           <h2 className="text-2xl font-bold">Gestionar: {festivalActivo.nombre}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">✕</button>
         </div>
         <div className="border-b">
           <button
@@ -497,8 +497,8 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                     <div key={grado.id} className="border rounded p-3 flex justify-between items-center">
                       <div>
                         <strong>{grado.nombre}</strong>
-                        <span className="text-gray-500 ml-2">({grado.tipo}) · {grado.jornada} · {grado.participantes} participantes</span>
-                        <span className="text-gray-500 ml-2">· Grupos: {grupos.grupos3} de 3, {grupos.grupos2} de 2</span>
+                        <span className="text-gray-600 ml-2">({grado.tipo}) · {grado.jornada} · {grado.participantes} participantes</span>
+                        <span className="text-gray-600 ml-2">· Grupos: {grupos.grupos3} de 3, {grupos.grupos2} de 2</span>
                       </div>
                       <div className="flex gap-2">
                         {grado.archivo && (
@@ -546,7 +546,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                  <div>
                    <h4 className="font-semibold mb-2">Mañana</h4>
                     {bloquesMañana.length === 0 ? (
-                      <p className="text-sm text-gray-400 mb-3">Sin bloques</p>
+                      <p className="text-sm text-gray-500 mb-3">Sin bloques</p>
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
                         {bloquesMañana.map(bloque => {
@@ -605,7 +605,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                  <div>
                    <h4 className="font-semibold mb-2">Tarde</h4>
                    {bloquesTarde.length === 0 ? (
-                     <p className="text-sm text-gray-400 mb-3">Sin bloques</p>
+                      <p className="text-sm text-gray-500 mb-3">Sin bloques</p>
                    ) : (
                      <div className="grid grid-cols-2 gap-3">
                         {bloquesTarde.map(bloque => {

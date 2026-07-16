@@ -67,9 +67,9 @@ export default function TiposJuegosPage() {
             </button>
           </div>
           {loadingTipos ? (
-            <p className="text-sm text-gray-500">Cargando tipos...</p>
+            <p className="text-sm text-gray-600">Cargando tipos...</p>
           ) : tipos.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay tipos registrados</p>
+            <p className="text-sm text-gray-600">No hay tipos registrados</p>
           ) : (
             <div className="flex flex-wrap gap-2 mb-6">
               {tipos.map((tipo) => (
@@ -107,9 +107,9 @@ export default function TiposJuegosPage() {
             </button>
           </div>
           {loadingJuegos ? (
-            <p className="text-sm text-gray-500">Cargando juegos...</p>
+            <p className="text-sm text-gray-600">Cargando juegos...</p>
           ) : tipos.length === 0 ? (
-            <p className="text-sm text-gray-500">Agrega tipos de festival primero</p>
+            <p className="text-sm text-gray-600">Agrega tipos de festival primero</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {tipos.map((tipo) => {

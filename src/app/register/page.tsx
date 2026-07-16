@@ -106,7 +106,7 @@ export default function RegisterPage() {
         <button type="submit" disabled={loading} className="w-full px-3 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
           {loading ? "Registrando..." : "Registrarse"}
         </button>
-        <p className="text-xs text-gray-400 mt-4 text-center">
+        <p className="text-xs text-gray-500 mt-4 text-center">
           <Link href="/" className="text-blue-600 hover:underline">¿Ya tienes cuenta? Vuelve al inicio</Link>
         </p>
       </form>
