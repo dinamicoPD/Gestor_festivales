@@ -50,6 +50,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
   const [guardandoEncargados, setGuardandoEncargados] = useState(false)
   const [guardandoJefes, setGuardandoJefes] = useState(false)
   const [guardandoAdicionales, setGuardandoAdicionales] = useState(false)
+  const [capacidadBloque, setCapacidadBloque] = useState(180)
   const [juegosEncargados, setJuegosEncargados] = useState<Record<string, Array<{ juego: string; encargado: string; grado: string; ubicacion: string }>>>({})
   const [jefesExploracion, setJefesExploracion] = useState<Record<string, string[]>>({})
 
@@ -399,8 +400,8 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
   const totalParticipantes = festivalActivo.cursos.reduce((s, c) => s + c.participantes, 0)
   const cursosMañana = festivalActivo.cursos.filter(c => c.jornada === "mañana")
   const cursosTarde = festivalActivo.cursos.filter(c => c.jornada === "tarde")
-  const bloquesMañana = cursosMañana.length > 0 ? distribuirCursosEnBloques(cursosMañana) : distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "mañana"))
-  const bloquesTarde = cursosTarde.length > 0 ? distribuirCursosEnBloques(cursosTarde) : distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "tarde"))
+  const bloquesMañana = cursosMañana.length > 0 ? distribuirCursosEnBloques(cursosMañana, capacidadBloque) : distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "mañana"), capacidadBloque)
+  const bloquesTarde = cursosTarde.length > 0 ? distribuirCursosEnBloques(cursosTarde, capacidadBloque) : distribuirGradosEnBloques(festivalActivo.grados.filter(g => g.jornada === "tarde"), capacidadBloque)
   const cantidadBloques = bloquesMañana.length + bloquesTarde.length
 
   console.log("GestionModal - festival:", festivalActivo.id, "cursos:", festivalActivo.cursos.length, "grados:", festivalActivo.grados.length, "bloques mañana:", bloquesMañana.length, "bloques tarde:", bloquesTarde.length)
@@ -533,14 +534,24 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
           )}
           {tabActiva === "bloques" && (
             <div>
-              <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="text-lg font-semibold">Bloques del Festival</h3>
-                  <p className="text-gray-600 text-sm">Total: {totalParticipantes} participantes · {cantidadBloques} bloques (máx. 150 por bloque) · Cursos: {festivalActivo.cursos.length} · Mañana: {bloquesMañana.length} · Tarde: {bloquesTarde.length}</p>
+                  <p className="text-gray-600 text-sm">Total: {totalParticipantes} participantes · {cantidadBloques} bloques (máx. {capacidadBloque} por bloque) · Cursos: {festivalActivo.cursos.length} · Mañana: {bloquesMañana.length} · Tarde: {bloquesTarde.length}</p>
                 </div>
-                <button onClick={handleActualizarBloque} disabled={guardandoBloques} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
-                  {guardandoBloques ? "Actualizando..." : "Actualizar Bloque"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={capacidadBloque}
+                    onChange={(e) => setCapacidadBloque(Number(e.target.value))}
+                    className="px-3 py-2 border rounded text-sm"
+                  >
+                    <option value="180">180 por bloque</option>
+                    <option value="210">210 por bloque</option>
+                  </select>
+                  <button onClick={handleActualizarBloque} disabled={guardandoBloques} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                    {guardandoBloques ? "Actualizando..." : "Actualizar Bloque"}
+                  </button>
+                </div>
               </div>
               <div className="grid gap-3">
                  <div>

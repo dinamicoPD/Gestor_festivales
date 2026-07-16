@@ -12,20 +12,20 @@ interface BloqueCurso {
   total: number
 }
 
-export function generarBloques(participantes: number) {
+export function generarBloques(participantes: number, capacidad = 180) {
   const bloques: { numero: number }[] = []
   let contadorBloque = 1
   let restantes = participantes
 
   while (restantes > 0) {
     bloques.push({ numero: contadorBloque++ })
-    restantes -= 150
+    restantes -= capacidad
   }
 
   return bloques
 }
 
-export function distribuirCursosEnBloques(cursos: Curso[], capacidad = 150) {
+export function distribuirCursosEnBloques(cursos: Curso[], capacidad = 180) {
   const ordenados = [...cursos].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo))
   const bloques: BloqueCurso[] = []
   let actual = { numero: 1, cursos: [] as Curso[], total: 0 }
@@ -67,7 +67,7 @@ export function distribuirCursosEnBloques(cursos: Curso[], capacidad = 150) {
   return bloques
 }
 
-export function distribuirGradosEnBloques(grados: Grado[], capacidad = 150) {
+export function distribuirGradosEnBloques(grados: Grado[], capacidad = 180) {
   const ordenados = [...grados].sort((a, b) => ordenarTipoGrado(a.tipo) - ordenarTipoGrado(b.tipo))
   const bloques: BloqueGrado[] = []
   let actual = { numero: 1, grados: [] as Grado[], total: 0 }
