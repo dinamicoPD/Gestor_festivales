@@ -78,16 +78,16 @@ export default function DashboardPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-blue-600 hover:text-blue-800">
+            <Link href="/" className="text-blue-800 font-medium hover:text-blue-900">
               ← Festivales
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/tipos-juegos" className="text-blue-600 hover:text-blue-800">
+            <Link href="/tipos-juegos" className="text-blue-800 font-medium hover:text-blue-900">
               Tipos y Juegos
             </Link>
-            <Link href="/admin" className="text-blue-600 hover:text-blue-800">
+            <Link href="/admin" className="text-blue-800 font-medium hover:text-blue-900">
               Gestión de Organizadores
             </Link>
           </div>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
               <button onClick={mesAnterior} className="px-3 py-1 border rounded hover:bg-gray-50">
                 ← Anterior
               </button>
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-semibold text-gray-900">
                 {MESES[mesActual.month]} {mesActual.year}
               </h2>
               <button onClick={mesSiguiente} className="px-3 py-1 border rounded hover:bg-gray-50">
@@ -168,9 +168,9 @@ export default function DashboardPage() {
                   .map(f => (
                     <div key={f.id} className="border rounded-lg p-4 flex justify-between items-center">
                       <div>
-                        <h4 className="font-semibold">{f.nombre}</h4>
-                        <p className="text-sm text-gray-600">{f.colegio} · {f.sede}</p>
-                        <p className="text-sm text-gray-600">
+                         <h4 className="font-semibold text-gray-900">{f.nombre}</h4>
+                         <p className="text-sm text-gray-700">{f.colegio} · {f.sede}</p>
+                         <p className="text-sm text-gray-700">
                           {f.fecha && new Date(f.fecha + "T00:00:00").toLocaleDateString("es-ES", {
                             weekday: "long",
                             year: "numeric",
@@ -202,7 +202,7 @@ export default function DashboardPage() {
           )}
 
           {festivalesDelMes.length === 0 && (
-            <div className="mt-6 text-center py-8 text-gray-600">
+            <div className="mt-6 text-center py-8 text-gray-700">
               No hay festivales programados para este mes
             </div>
           )}

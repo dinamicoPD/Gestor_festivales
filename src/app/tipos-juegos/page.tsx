@@ -53,7 +53,7 @@ export default function TiposJuegosPage() {
       </header>
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Tipos de Festival</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Tipos de Festival</h2>
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -75,7 +75,7 @@ export default function TiposJuegosPage() {
               {tipos.map((tipo) => (
                 <span key={tipo} className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full text-sm">
                   {tipo}
-                  <button onClick={async () => { await eliminarTipo(tipo) }} className="text-red-600 hover:text-red-800">✕</button>
+                  <button onClick={async () => { await eliminarTipo(tipo) }} className="text-red-800 font-medium hover:text-red-900">✕</button>
                 </span>
               ))}
             </div>
@@ -83,7 +83,7 @@ export default function TiposJuegosPage() {
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Juegos por Tipo de Festival</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Juegos por Tipo de Festival</h2>
           <div className="flex gap-2 mb-4 items-center">
             <select
               value={tipoSeleccionado}
@@ -118,13 +118,13 @@ export default function TiposJuegosPage() {
                   <div key={tipo} className="border rounded-lg p-3">
                     <h4 className="font-semibold mb-2">{tipo}</h4>
                     {lista.length === 0 ? (
-                      <p className="text-xs text-gray-500">Sin juegos</p>
+                      <p className="text-xs text-gray-700">Sin juegos</p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {lista.map((juego) => (
                           <span key={juego} className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm">
                             {juego}
-                            <button onClick={async () => { await eliminarJuego(tipo, juego) }} className="text-red-600 hover:text-red-800">✕</button>
+                            <button onClick={async () => { await eliminarJuego(tipo, juego) }} className="text-red-800 font-medium hover:text-red-900">✕</button>
                           </span>
                         ))}
                       </div>

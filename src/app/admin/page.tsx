@@ -39,7 +39,7 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+            <Link href="/dashboard" className="text-blue-800 font-medium hover:text-blue-900">
               Dashboard
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Gestión de Organizadores</h1>
@@ -82,22 +82,22 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2">
-                      <button
-                        onClick={() => toggleActivo(u.id)}
-                        className="text-xs mr-2 text-blue-600 hover:underline"
-                      >
-                        {u.activo ? "Desactivar" : "Activar"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm("¿Eliminar este organizador?")) {
-                            eliminarUsuario(u.id)
-                          }
-                        }}
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        Eliminar
-                      </button>
+                       <button
+                         onClick={() => toggleActivo(u.id)}
+                         className="text-xs mr-2 text-blue-800 font-medium hover:underline"
+                       >
+                         {u.activo ? "Desactivar" : "Activar"}
+                       </button>
+                       <button
+                         onClick={() => {
+                           if (confirm("¿Eliminar este organizador?")) {
+                             eliminarUsuario(u.id)
+                           }
+                         }}
+                         className="text-xs text-red-800 font-medium hover:underline"
+                       >
+                         Eliminar
+                       </button>
                     </td>
                   </tr>
                 ))
@@ -110,7 +110,7 @@ export default function AdminPage() {
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <form onSubmit={handleCreateUsuario} className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Crear Nuevo Organizador</h2>
+             <h2 className="text-lg font-bold text-gray-900 mb-4">Crear Nuevo Organizador</h2>
             <input
               type="text"
               placeholder="Usuario *"

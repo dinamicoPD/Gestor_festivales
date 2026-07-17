@@ -498,19 +498,19 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                     <div key={grado.id} className="border rounded p-3 flex justify-between items-center">
                       <div>
                         <strong>{grado.nombre}</strong>
-                        <span className="text-gray-600 ml-2">({grado.tipo}) · {grado.jornada} · {grado.participantes} participantes</span>
-                        <span className="text-gray-600 ml-2">· Grupos: {grupos.grupos3} de 3, {grupos.grupos2} de 2</span>
+                        <span className="text-gray-700 ml-2">({grado.tipo}) · {grado.jornada} · {grado.participantes} participantes</span>
+                        <span className="text-gray-700 ml-2">· Grupos: {grupos.grupos3} de 3, {grupos.grupos2} de 2</span>
                       </div>
                       <div className="flex gap-2">
-                        {grado.archivo && (
-                          <>
-                            <button onClick={() => abrirDrive(grado)} className="text-green-700">Abrir archivo</button>
-                            <button onClick={() => eliminarLinkDrive(grado.id)} className="text-red-600">Eliminar</button>
-                          </>
-                        )}
-                        <button onClick={() => { setEditandoDriveId(grado.id); if (inputDriveRef.current) inputDriveRef.current.focus() }} className="text-blue-600">Link Drive</button>
-                        <button onClick={() => abrirModalGrado(grado)} className="text-blue-600">Editar</button>
-                        <button onClick={() => eliminarGrado(grado.id)} className="text-red-600">Eliminar</button>
+                         {grado.archivo && (
+                           <>
+                             <button onClick={() => abrirDrive(grado)} className="text-green-800 font-medium">Abrir archivo</button>
+                             <button onClick={() => eliminarLinkDrive(grado.id)} className="text-red-800 font-medium">Eliminar</button>
+                           </>
+                         )}
+                         <button onClick={() => { setEditandoDriveId(grado.id); if (inputDriveRef.current) inputDriveRef.current.focus() }} className="text-blue-800 font-medium">Link Drive</button>
+                         <button onClick={() => abrirModalGrado(grado)} className="text-blue-800 font-medium">Editar</button>
+                         <button onClick={() => eliminarGrado(grado.id)} className="text-red-800 font-medium">Eliminar</button>
                       </div>
 
                       {editandoDriveId === grado.id && (
@@ -555,25 +555,25 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
               </div>
               <div className="grid gap-3">
                  <div>
-                   <h4 className="font-semibold mb-2">Mañana</h4>
+                    <h4 className="font-semibold mb-2">Mañana</h4>
                     {bloquesMañana.length === 0 ? (
-                      <p className="text-sm text-gray-500 mb-3">Sin bloques</p>
+                      <p className="text-sm text-gray-600 mb-3">Sin bloques</p>
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
-                        {bloquesMañana.map(bloque => {
-                          const bloqueId = `mañana-${bloque.numero}`
-                          const config = bloquesConfig.find(b => b.id === bloqueId)
-                          const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
-                          const items = (bloque as any).cursos || (bloque as any).grados || []
-                          return (
-                            <div key={bloqueId} className="border rounded-lg p-3">
-                              <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
-                                <span className="text-xs text-gray-500">{bloque.total} participantes</span>
-                              </div>
-                              <div className="text-xs text-gray-600 mb-2">
-                                Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
-                              </div>
+                         {bloquesMañana.map(bloque => {
+                           const bloqueId = `mañana-${bloque.numero}`
+                           const config = bloquesConfig.find(b => b.id === bloqueId)
+                           const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
+                           const items = (bloque as any).cursos || (bloque as any).grados || []
+                           return (
+                             <div key={bloqueId} className="border rounded-lg p-3">
+                               <div className="flex justify-between items-center mb-2">
+                                 <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
+                                 <span className="text-xs text-gray-700">{bloque.total} participantes</span>
+                               </div>
+                               <div className="text-xs text-gray-700 mb-2">
+                                 Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
+                               </div>
                               <div className="grid gap-1 mb-2">
                                  {niveles.map((nivelInfo, idx) => {
                                    return (
@@ -614,25 +614,25 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                     )}
                  </div>
                  <div>
-                   <h4 className="font-semibold mb-2">Tarde</h4>
-                   {bloquesTarde.length === 0 ? (
-                      <p className="text-sm text-gray-500 mb-3">Sin bloques</p>
-                   ) : (
+                    <h4 className="font-semibold mb-2">Tarde</h4>
+                    {bloquesTarde.length === 0 ? (
+                       <p className="text-sm text-gray-600 mb-3">Sin bloques</p>
+                    ) : (
                      <div className="grid grid-cols-2 gap-3">
-                        {bloquesTarde.map(bloque => {
-                          const bloqueId = `tarde-${bloque.numero}`
-                          const config = bloquesConfig.find(b => b.id === bloqueId)
-                          const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
-                          const items = (bloque as any).cursos || (bloque as any).grados || []
-                          return (
-                            <div key={bloqueId} className="border rounded-lg p-3">
-                              <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
-                                <span className="text-xs text-gray-500">{bloque.total} participantes</span>
-                              </div>
-                              <div className="text-xs text-gray-600 mb-2">
-                                Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
-                              </div>
+                         {bloquesTarde.map(bloque => {
+                           const bloqueId = `tarde-${bloque.numero}`
+                           const config = bloquesConfig.find(b => b.id === bloqueId)
+                           const niveles = config?.niveles ?? Array.from({ length: MAX_NIVELES }, () => ({ nivel: "", color: DEFAULT_COLOR }))
+                           const items = (bloque as any).cursos || (bloque as any).grados || []
+                           return (
+                             <div key={bloqueId} className="border rounded-lg p-3">
+                               <div className="flex justify-between items-center mb-2">
+                                 <h4 className="font-semibold text-sm">Bloque {bloque.numero}</h4>
+                                 <span className="text-xs text-gray-700">{bloque.total} participantes</span>
+                               </div>
+                               <div className="text-xs text-gray-700 mb-2">
+                                 Grupos: {(() => { const g = calcularGrupos(bloque.total); return `${g.grupos3} de 3, ${g.grupos2} de 2`; })()}
+                               </div>
                               <div className="grid gap-1 mb-2">
                                  {niveles.map((nivelInfo, idx) => {
                                    return (
@@ -748,14 +748,14 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
                                     />
                                   </td>
                                   <td className="border border-gray-300 px-2 py-1 text-center">
-                                    <button onClick={() => eliminarFilaEncargado(bloqueId, idx)} className="text-red-600 hover:text-red-800">Eliminar</button>
+                                    <button onClick={() => eliminarFilaEncargado(bloqueId, idx)} className="text-red-800 font-medium hover:text-red-900">Eliminar</button>
                                   </td>
                                 </tr>
                               )
                             })}
                             <tr key={`${bloqueId}-add`} className="bg-white">
                               <td colSpan={5} className="border border-gray-300 px-2 py-1 text-center">
-                                <button onClick={() => agregarFilaEncargado(bloqueId)} className="text-blue-600 hover:text-blue-800">+ Agregar fila</button>
+                                 <button onClick={() => agregarFilaEncargado(bloqueId)} className="text-blue-800 font-medium hover:text-blue-900">+ Agregar fila</button>
                               </td>
                             </tr>
                           </Fragment>
@@ -766,7 +766,7 @@ export function GestionModal({ festival, onClose, onUpdate, juegosPorTipo, sincr
               </div>
                <div className="mt-6">
                  <div className="flex justify-between items-center mb-4">
-                   <h4 className="text-lg font-semibold">Jefes de Exploración por Grado</h4>
+                    <h4 className="text-lg font-semibold text-gray-900">Jefes de Exploración por Grado</h4>
                    <button onClick={handleGuardarJefes} disabled={guardandoJefes} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                      {guardandoJefes ? "Guardando..." : "Guardar Jefes"}
                    </button>

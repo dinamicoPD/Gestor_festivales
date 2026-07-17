@@ -79,17 +79,17 @@ export default function Home() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+            <Link href="/dashboard" className="text-blue-800 font-medium hover:text-blue-900">
               Dashboard
             </Link>
-            <Link href="/tipos-juegos" className="text-blue-600 hover:text-blue-800">
+            <Link href="/tipos-juegos" className="text-blue-800 font-medium hover:text-blue-900">
               Tipos y Juegos
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Festivales</h1>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/admin" className="text-blue-600 hover:text-blue-800">Gestión de Organizadores</a>
-            <a href="/register" className="text-blue-600 hover:text-blue-800">Registrar Organizador</a>
+            <a href="/admin" className="text-blue-800 font-medium hover:text-blue-900">Gestión de Organizadores</a>
+            <a href="/register" className="text-blue-800 font-medium hover:text-blue-900">Registrar Organizador</a>
           </div>
         </div>
       </header>
@@ -110,7 +110,7 @@ export default function Home() {
           </button>
         </div>
         {festivalesFiltrados.length === 0 ? (
-          <div className="text-center py-12">No se encontraron festivales</div>
+          <div className="text-center py-12 text-gray-700">No se encontraron festivales</div>
         ) : (
           <div className="grid gap-4">
             {festivalesFiltrados.map((festival) => {
@@ -120,19 +120,19 @@ export default function Home() {
                 <div key={festival.id} className="bg-white rounded-lg shadow p-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-xl font-semibold">{festival.nombre}</h3>
-                      <p className="text-gray-600">{festival.colegio}</p>
-                      <div className="text-sm text-gray-600 mt-2">
+                      <h3 className="text-xl font-semibold text-gray-900">{festival.nombre}</h3>
+                      <p className="text-gray-700">{festival.colegio}</p>
+                      <div className="text-sm text-gray-700 mt-2">
                         {festival.grados.length} grados · {totalParticipantes} participantes · {totalBloques} bloques
                       </div>
                       {(festival.fecha_capacitacion || festival.encargado_capacitacion) && (
-                        <div className="text-sm text-gray-600 mt-1">
+                      <div className="text-sm text-gray-700 mt-1">
                           {festival.fecha_capacitacion && <span>Capacitación: {festival.fecha_capacitacion}</span>}
                           {festival.fecha_capacitacion && festival.encargado_capacitacion && <span> · </span>}
                           {festival.encargado_capacitacion && <span>Encargado: {festival.encargado_capacitacion}</span>}
                         </div>
                       )}
-                      <div className="text-sm text-gray-600 mt-1">
+                      <div className="text-sm text-gray-700 mt-1">
                         <span className="font-medium">Pago:</span>{" "}
                         {festival.estado_pago === "pagado" && <span className="text-green-700">Pagado</span>}
                         {festival.estado_pago === "pendiente" && <span className="text-red-700">Pendiente</span>}
@@ -142,13 +142,13 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => abrirEditarFestival(festival)} className="px-3 py-1 bg-yellow-100 rounded">
+                      <button onClick={() => abrirEditarFestival(festival)} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200">
                         Editar
                       </button>
-                      <button onClick={() => abrirGestionGrados(festival)} className="px-3 py-1 bg-purple-100 rounded">
+                      <button onClick={() => abrirGestionGrados(festival)} className="px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200">
                         Gestionar
                       </button>
-                      <button onClick={() => eliminarFestival(festival.id)} className="px-3 py-1 bg-red-100 rounded text-red-700">
+                      <button onClick={() => eliminarFestival(festival.id)} className="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
                         Eliminar
                       </button>
                     </div>
