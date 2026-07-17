@@ -110,16 +110,16 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
-              <button onClick={mesAnterior} className="px-3 py-1 border rounded hover:bg-gray-50">
+              <button onClick={mesAnterior} className="px-3 py-1 border rounded text-gray-800 font-medium hover:bg-gray-50">
                 ← Anterior
               </button>
               <h2 className="text-xl font-semibold text-gray-900">
                 {MESES[mesActual.month]} {mesActual.year}
               </h2>
-              <button onClick={mesSiguiente} className="px-3 py-1 border rounded hover:bg-gray-50">
+              <button onClick={mesSiguiente} className="px-3 py-1 border rounded text-gray-800 font-medium hover:bg-gray-50">
                 Siguiente →
               </button>
-              <button onClick={irHoy} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button onClick={irHoy} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
                 Hoy
               </button>
             </div>

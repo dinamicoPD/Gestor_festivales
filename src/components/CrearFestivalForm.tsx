@@ -178,10 +178,10 @@ export function CrearFestivalForm({ onClose, onSave, festival, tipos = [] }: Cre
           </select>
         </div>
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1 border rounded">
+          <button type="button" onClick={onClose} className="px-3 py-1 border rounded text-gray-800 font-medium hover:bg-gray-50">
             Cancelar
           </button>
-          <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded">
+          <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
             {festival ? "Guardar" : "Crear"}
           </button>
         </div>
